@@ -144,7 +144,7 @@ def page_setting():
             update_key("burn_subtitles", burn_subtitles)
             st.rerun()
     with st.expander(t("Dubbing Settings"), expanded=True):
-        tts_methods = ["edge_tts", "custom_tts", "openai_tts"]
+        tts_methods = ["edge_tts", "openai_tts"]
         current_tts = load_key("tts_method")
         if "prev_tts_method" not in st.session_state:
             st.session_state.prev_tts_method = current_tts

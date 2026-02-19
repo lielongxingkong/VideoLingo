@@ -31,7 +31,7 @@ DEFAULT_CONFIG = {
     "asr.runtime": "openai",
     "asr.elevenlabs_api_key": "",
     "asr.openai_api_key": "",
-    "asr.openai_base_url": "",
+    "asr.openai_base_url": "https://api.openai.com/v1",
 
     # Subtitle
     "target_language": "简体中文",
@@ -48,7 +48,7 @@ DEFAULT_CONFIG = {
     # TTS
     "tts_method": "openai_tts",
     "openai_tts.api_key": "",
-    "openai_tts.base_url": "",
+    "openai_tts.base_url": "https://api.openai.com/v1",
     "openai_tts.voice": "alloy",
     "openai_tts.model": "tts-1",
     "edge_tts.voice": "zh-CN-XiaoxiaoNeural",

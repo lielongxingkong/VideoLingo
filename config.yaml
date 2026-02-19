@@ -33,7 +33,7 @@ whisper:
   language: 'en'
   detected_language: 'en'
   # Whisper running mode ["elevenlabs", "openai"].
-  runtime: 'elevenlabs'
+  runtime: 'openai'
   # ElevenLabs API key
   elevenlabs_api_key: 'your_elevenlabs_api_key'
   # OpenAI API key (for OpenAI Whisper ASR, uses api.key if not set)
@@ -74,8 +74,8 @@ reflect_translate: true
 pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
-# TTS selection [sf_fish_tts, edge_tts, custom_tts, sf_cosyvoice2, openai_tts]
-tts_method: 'sf_cosyvoice2'
+# TTS selection [edge_tts, custom_tts, openai_tts]
+tts_method: 'openai_tts'
 
 # OpenAI TTS configuration
 openai_tts:
@@ -87,22 +87,6 @@ openai_tts:
   voice: 'alloy'
   # Model: tts-1 or tts-1-hd
   model: 'tts-1'
-
-# SiliconFlow FishTTS
-sf_fish_tts:
-  # SiliconFlow API key
-  api_key: 'YOUR_API_KEY'
-  # only for mode "preset"
-  voice: 'anna'
-  # *only for mode "custom", dont set manually
-  custom_name: ''
-  voice_id: ''
-  # preset, custom, dynamic
-  mode: "preset"
-
-# SiliconFlow CosyVoice2 Clone
-sf_cosyvoice2:
-  api_key: 'YOUR_SF_KEY'
 
 # Edge TTS configuration
 edge_tts:

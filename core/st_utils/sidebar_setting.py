@@ -91,42 +91,19 @@ def page_setting():
             update_key("burn_subtitles", burn_subtitles)
             st.rerun()
     with st.expander(t("Dubbing Settings"), expanded=True):
-        tts_methods = ["sf_fish_tts", "edge_tts", "custom_tts", "sf_cosyvoice2", "openai_tts"]
+        tts_methods = ["edge_tts", "custom_tts", "openai_tts"]
         current_tts = load_key("tts_method")
-        if current_tts in ["gpt_sovits", "azure_tts", "fish_tts", "f5tts"]:
-            current_tts = "edge_tts"
+        if current_tts in ["gpt_sovits", "azure_tts", "fish_tts", "f5tts", "sf_fish_tts", "sf_cosyvoice2"]:
+            current_tts = "openai_tts"
         select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(current_tts) if current_tts in tts_methods else 0)
         if select_tts != load_key("tts_method"):
             update_key("tts_method", select_tts)
             st.rerun()
 
         # sub settings for each tts method
-        if select_tts == "sf_fish_tts":
-            config_input(t("SiliconFlow API Key"), "sf_fish_tts.api_key")
-
-            # Add mode selection dropdown
-            mode_options = {
-                "preset": t("Preset"),
-                "custom": t("Refer_stable"),
-                "dynamic": t("Refer_dynamic")
-            }
-            selected_mode = st.selectbox(
-                t("Mode Selection"),
-                options=list(mode_options.keys()),
-                format_func=lambda x: mode_options[x],
-                index=list(mode_options.keys()).index(load_key("sf_fish_tts.mode")) if load_key("sf_fish_tts.mode") in mode_options.keys() else 0
-            )
-            if selected_mode != load_key("sf_fish_tts.mode"):
-                update_key("sf_fish_tts.mode", selected_mode)
-                st.rerun()
-            if selected_mode == "preset":
-                config_input("Voice", "sf_fish_tts.voice")
-
-        elif select_tts == "edge_tts":
+        if select_tts == "edge_tts":
             config_input(t("Edge TTS Voice"), "edge_tts.voice")
 
-        elif select_tts == "sf_cosyvoice2":
-            config_input(t("SiliconFlow API Key"), "sf_cosyvoice2.api_key")
         elif select_tts == "openai_tts":
             config_input(t("OpenAI API Key"), "openai_tts.api_key")
             config_input(t("OpenAI Base URL"), "openai_tts.base_url")

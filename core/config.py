@@ -37,18 +37,6 @@ class OpenAITTSConfig:
     model: str = "tts-1"
 
 @dataclass
-class SFFishTTSConfig:
-    api_key: str = ""
-    voice: str = "anna"
-    custom_name: str = ""
-    voice_id: str = ""
-    mode: str = "preset"
-
-@dataclass
-class SFCosyVoice2Config:
-    api_key: str = ""
-
-@dataclass
 class EdgeTTSConfig:
     voice: str = "zh-CN-XiaoxiaoNeural"
 
@@ -93,10 +81,8 @@ class Config:
     pause_before_translate: bool = False
 
     # Dubbing Settings
-    tts_method: str = "sf_cosyvoice2"
+    tts_method: str = "openai_tts"
     openai_tts: OpenAITTSConfig = field(default_factory=OpenAITTSConfig)
-    sf_fish_tts: SFFishTTSConfig = field(default_factory=SFFishTTSConfig)
-    sf_cosyvoice2: SFCosyVoice2Config = field(default_factory=SFCosyVoice2Config)
     edge_tts: EdgeTTSConfig = field(default_factory=EdgeTTSConfig)
     speed_factor: SpeedFactorConfig = field(default_factory=SpeedFactorConfig)
     min_subtitle_duration: float = 2.5
@@ -137,7 +123,7 @@ class Config:
             raise ValueError("Whisper runtime must be 'elevenlabs' or 'openai'")
 
         # Validate TTS settings
-        allowed_tts_methods = ["sf_fish_tts", "edge_tts", "custom_tts", "sf_cosyvoice2", "openai_tts"]
+        allowed_tts_methods = ["edge_tts", "custom_tts", "openai_tts"]
         if self.tts_method not in allowed_tts_methods:
             raise ValueError(f"TTS method must be one of {allowed_tts_methods}")
 
@@ -249,16 +235,6 @@ def load(cls) -> "Config":
     config.openai_tts.base_url = load_key("openai_tts.base_url")
     config.openai_tts.voice = load_key("openai_tts.voice")
     config.openai_tts.model = load_key("openai_tts.model")
-
-    # Load SiliconFlow FishTTS settings
-    config.sf_fish_tts.api_key = load_key("sf_fish_tts.api_key")
-    config.sf_fish_tts.voice = load_key("sf_fish_tts.voice")
-    config.sf_fish_tts.custom_name = load_key("sf_fish_tts.custom_name")
-    config.sf_fish_tts.voice_id = load_key("sf_fish_tts.voice_id")
-    config.sf_fish_tts.mode = load_key("sf_fish_tts.mode")
-
-    # Load SiliconFlow CosyVoice2 settings
-    config.sf_cosyvoice2.api_key = load_key("sf_cosyvoice2.api_key")
 
     # Load Edge TTS settings
     config.edge_tts.voice = load_key("edge_tts.voice")

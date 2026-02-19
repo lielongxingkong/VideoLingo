@@ -14,7 +14,7 @@ DEFAULT_CONFIG = {
 
     # API
     "api.key": "",
-    "api.base_url": "https://yunwu.ai",
+    "api.base_url": "https://www.dmxapi.cn",
     "api.model": "gpt-4.1-2025-04-14",
     "api.format": "openai",
     "api.llm_support_json": False,
@@ -31,7 +31,7 @@ DEFAULT_CONFIG = {
     "asr.runtime": "openai",
     "asr.elevenlabs_api_key": "",
     "asr.openai_api_key": "",
-    "asr.openai_base_url": "https://api.openai.com/v1",
+    "asr.openai_base_url": "https://www.dmxapi.cn",
 
     # Subtitle
     "target_language": "简体中文",
@@ -48,7 +48,7 @@ DEFAULT_CONFIG = {
     # TTS
     "tts_method": "openai_tts",
     "openai_tts.api_key": "",
-    "openai_tts.base_url": "https://api.openai.com/v1",
+    "openai_tts.base_url": "https://www.dmxapi.cn",
     "openai_tts.voice": "alloy",
     "openai_tts.model": "tts-1",
     "edge_tts.voice": "zh-CN-XiaoxiaoNeural",

@@ -18,16 +18,13 @@ def transcribe():
     # 4. Transcribe audio by clips
     all_results = []
     runtime = load_key("whisper.runtime")
-    if runtime == "cloud":
-        from core.asr_backend.whisperX_302 import transcribe_audio_302 as ts
-        rprint("[cyan]🎤 Transcribing audio with 302 API...[/cyan]")
-    elif runtime == "elevenlabs":
+    if runtime == "elevenlabs":
         from core.asr_backend.elevenlabs_asr import transcribe_audio_elevenlabs as ts
         rprint("[cyan]🎤 Transcribing audio with ElevenLabs API...[/cyan]")
     else:
-        # Default to cloud if runtime is invalid
-        from core.asr_backend.whisperX_302 import transcribe_audio_302 as ts
-        rprint("[cyan]🎤 Transcribing audio with 302 API...[/cyan]")
+        # Default to elevenlabs if runtime is invalid
+        from core.asr_backend.elevenlabs_asr import transcribe_audio_elevenlabs as ts
+        rprint("[cyan]🎤 Transcribing audio with ElevenLabs API...[/cyan]")
 
     for start, end in segments:
         result = ts(_RAW_AUDIO_FILE, vocal_audio, start, end)

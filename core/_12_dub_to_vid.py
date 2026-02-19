@@ -29,10 +29,9 @@ TRANS_OUTLINE_WIDTH = 1
 TRANS_BACK_COLOR = '&H33000000'
 
 def merge_video_audio():
-    """Merge video and audio, and reduce video volume"""
+    """Merge video and audio"""
     VIDEO_FILE = find_video_files()
-    background_file = _BACKGROUND_AUDIO_FILE
-    
+
     if not load_key("burn_subtitles"):
         rprint("[bold yellow]Warning: A 0-second black video will be generated as a placeholder as subtitles are not burned in.[/bold yellow]")
 
@@ -49,7 +48,7 @@ def merge_video_audio():
     # Normalize dub audio
     normalized_dub_audio = 'output/normalized_dub.wav'
     normalize_audio_volume(DUB_AUDIO, normalized_dub_audio)
-    
+
     # Merge video and audio with translated subtitles
     video = cv2.VideoCapture(VIDEO_FILE)
     TARGET_WIDTH = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -57,28 +56,58 @@ def merge_video_audio():
     video.release()
     rprint(f"[bold green]Video resolution: {TARGET_WIDTH}x{TARGET_HEIGHT}[/bold green]")
 
-    # Use simple subtitles filter without force_style to avoid parsing issues
-    subtitle_filter = f"subtitles={DUB_SUB_FILE}"
+    # Check if burn_subtitles is enabled
+    burn_subtitles = load_key("burn_subtitles")
 
-    cmd = [
-        'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', background_file, '-i', normalized_dub_audio,
-        '-filter_complex',
-        f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,'
-        f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,'
-        f'{subtitle_filter}[v];'
-        f'[1:a][2:a]amix=inputs=2:duration=first:dropout_transition=3[a]'
-    ]
+    if burn_subtitles:
+        # Try to use subtitles filter (requires libass support in FFmpeg)
+        cmd = [
+            'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', normalized_dub_audio,
+            '-filter_complex',
+            f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,'
+            f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,'
+            f"subtitles=filename={DUB_SUB_FILE}[v]"
+        ]
 
-    if load_key("ffmpeg_gpu"):
-        rprint("[bold green]Using GPU acceleration...[/bold green]")
-        cmd.extend(['-map', '[v]', '-map', '[a]', '-c:v', 'h264_nvenc'])
-    else:
-        cmd.extend(['-map', '[v]', '-map', '[a]'])
-    
-    cmd.extend(['-c:a', 'aac', '-b:a', '96k', DUB_VIDEO])
-    
-    subprocess.run(cmd)
-    rprint(f"[bold green]Video and audio successfully merged into {DUB_VIDEO}[/bold green]")
+        if load_key("ffmpeg_gpu"):
+            rprint("[bold green]Using GPU acceleration...[/bold green]")
+            cmd.extend(['-map', '[v]', '-map', '1:a', '-c:v', 'h264_nvenc'])
+        else:
+            cmd.extend(['-map', '[v]', '-map', '1:a'])
+
+        cmd.extend(['-c:a', 'aac', '-b:a', '96k', DUB_VIDEO])
+
+        result = subprocess.run(cmd, capture_output=True, text=True)
+
+        # Check if subtitles filter is available
+        if 'No such filter' in result.stderr or 'Filter not found' in result.stderr:
+            rprint("[yellow]⚠️ FFmpeg does not support 'subtitles' filter (missing libass). Skipping subtitle burning...[/yellow]")
+            burn_subtitles = False
+        else:
+            if result.returncode != 0:
+                rprint(f"[yellow]⚠️ Subtitle burning failed, falling back to no subtitles...[/yellow]")
+                rprint(f"[yellow]Error: {result.stderr[:200]}[/yellow]")
+                burn_subtitles = False
+            else:
+                rprint(f"[bold green]Video and audio successfully merged into {DUB_VIDEO}[/bold green]")
+                return
+
+    # Fallback: merge without subtitles
+    if not burn_subtitles:
+        cmd = [
+            'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', normalized_dub_audio,
+        ]
+
+        if load_key("ffmpeg_gpu"):
+            rprint("[bold green]Using GPU acceleration...[/bold green]")
+            cmd.extend(['-map', '0:v', '-map', '1:a', '-c:v', 'h264_nvenc'])
+        else:
+            cmd.extend(['-map', '0:v', '-map', '1:a'])
+
+        cmd.extend(['-c:a', 'aac', '-b:a', '96k', DUB_VIDEO])
+
+        subprocess.run(cmd)
+        rprint(f"[bold green]Video and audio successfully merged into {DUB_VIDEO}[/bold green]")
 
 if __name__ == '__main__':
     merge_video_audio()

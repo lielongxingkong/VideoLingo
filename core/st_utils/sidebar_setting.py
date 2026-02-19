@@ -94,8 +94,6 @@ def page_setting():
     with st.expander(t("Dubbing Settings"), expanded=True):
         tts_methods = ["edge_tts", "custom_tts", "openai_tts"]
         current_tts = load_key("tts_method")
-        if current_tts in ["gpt_sovits", "azure_tts", "fish_tts", "f5tts", "sf_fish_tts", "sf_cosyvoice2"]:
-            current_tts = "openai_tts"
         select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(current_tts) if current_tts in tts_methods else 0)
         if select_tts != load_key("tts_method"):
             update_key("tts_method", select_tts)

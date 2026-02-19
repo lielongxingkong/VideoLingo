@@ -173,13 +173,6 @@ class Paths:
         path.mkdir(exist_ok=True)
         return path
 
-    @staticmethod
-    def gpt_sovits_cache_dir() -> Path:
-        """Cache directory for GPT-SoVITS models"""
-        path = Paths.model_cache_dir() / "gpt_sovits"
-        path.mkdir(exist_ok=True)
-        return path
-
     # ==========================================
     # Helper Methods
     # ==========================================

@@ -92,11 +92,6 @@ openai_tts:
 edge_tts:
   voice: 'zh-CN-XiaoxiaoNeural'
 
-# SoVITS configuration (disabled - local model removed)
-# gpt_sovits:
-#   character: 'Huanyuv2'
-#   refer_mode: 3
-
 # *Audio speed range
 speed_factor:
   min: 1

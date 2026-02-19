@@ -29,6 +29,8 @@
     "Vocal separation enhance": "Улучшение отделения голоса",
     "Burn-in Subtitles": "Встроить субтитры",
     "Whether to burn subtitles into the video, will increase processing time": "Встраивать ли субтитры в видео, это увеличит время обработки",
+    "Enable Demucs Vocal Separation": "Включить разделение голоса Demucs",
+    "Separate vocals from background audio before ASR": "Отделить вокал от фонового аудио перед ASR",
     "Video Resolution": "Разрешение видео",
     "Recommended for videos with loud background noise, but will increase processing time": "Рекомендуется для видео с громким фоновым шумом, но увеличит время обработки",
     "Dubbing Settings": "Настройки дубляжа",

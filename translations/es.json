@@ -29,6 +29,8 @@
     "Vocal separation enhance": "Mejora de separación vocal",
     "Burn-in Subtitles": "Incrustar subtítulos",
     "Whether to burn subtitles into the video, will increase processing time": "Si se deben incrustar los subtítulos en el video, aumentará el tiempo de procesamiento",
+    "Enable Demucs Vocal Separation": "Habilitar separación vocal Demucs",
+    "Separate vocals from background audio before ASR": "Separar vocales del audio de fondo antes de ASR",
     "Video Resolution": "Resolución de video",
     "Recommended for videos with loud background noise, but will increase processing time": "Recomendado para videos con ruido de fondo fuerte, pero aumentará el tiempo de procesamiento",
     "Dubbing Settings": "Configuración de doblaje",

@@ -29,6 +29,8 @@
     "Vocal separation enhance": "人聲分離增強",
     "Burn-in Subtitles": "燒錄字幕",
     "Whether to burn subtitles into the video, will increase processing time": "是否將字幕燒錄到影片中，會增加處理時間",
+    "Enable Demucs Vocal Separation": "啟用Demucs人聲分離",
+    "Separate vocals from background audio before ASR": "在ASR轉錄前分離人聲和背景音樂",
     "Video Resolution": "影片解析度",
     "Recommended for videos with loud background noise, but will increase processing time": "建議用於背景噪音較大的影片,但會增加處理時間",
     "Dubbing Settings": "配音設定",

@@ -132,6 +132,193 @@ def page_setting():
             if selected_model != current_model:
                 update_key("openai_tts.model", selected_model)
                 st.rerun()
+
+    # Advanced Settings
+    with st.expander(t("Advanced Settings ⚙️"), expanded=False):
+        # Use tabs instead of nested expanders
+        tab_names = [t("Whisper/ASR"), t("LLM"), t("Subtitle"), t("Video"), t("Audio")]
+        tabs = st.tabs(tab_names)
+
+        with tabs[0]:
+            # Whisper & ASR settings
+            whisper_models = ["large-v3", "large-v3-turbo"]
+            current_model = load_key("whisper.model") or "large-v3"
+            selected_model = st.selectbox(
+                t("Whisper Model"),
+                options=whisper_models,
+                index=whisper_models.index(current_model) if current_model in whisper_models else 0,
+                help=t("Whisper model selection"),
+                key="adv_whisper_model"
+            )
+            if selected_model != current_model:
+                update_key("whisper.model", selected_model)
+                st.rerun()
+
+            demucs = st.toggle(t("Demucs Vocal Separation"), value=load_key("demucs"), help=t("Use Demucs for vocal separation before transcription"), key="adv_demucs")
+            if demucs != load_key("demucs"):
+                update_key("demucs", demucs)
+                st.rerun()
+
+        with tabs[1]:
+            # LLM settings
+            max_workers = st.number_input(
+                t("Max Workers"),
+                min_value=1,
+                max_value=32,
+                value=load_key("max_workers"),
+                help=t("Number of parallel LLM requests"),
+                key="adv_max_workers"
+            )
+            if max_workers != load_key("max_workers"):
+                update_key("max_workers", max_workers)
+
+            summary_length = st.number_input(
+                t("Summary Length"),
+                min_value=1000,
+                max_value=20000,
+                value=load_key("summary_length"),
+                step=1000,
+                help=t("Summary length in characters"),
+                key="adv_summary_length"
+            )
+            if summary_length != load_key("summary_length"):
+                update_key("summary_length", summary_length)
+
+            reflect_translate = st.toggle(t("Reflect Translation"), value=load_key("reflect_translate"), help=t("Show translation in original text context"), key="adv_reflect")
+            if reflect_translate != load_key("reflect_translate"):
+                update_key("reflect_translate", reflect_translate)
+                st.rerun()
+
+            pause_before_translate = st.toggle(t("Pause Before Translate"), value=load_key("pause_before_translate"), help=t("Pause to allow terminology adjustment"), key="adv_pause")
+            if pause_before_translate != load_key("pause_before_translate"):
+                update_key("pause_before_translate", pause_before_translate)
+                st.rerun()
+
+        with tabs[2]:
+            # Subtitle settings
+            max_length = st.number_input(
+                t("Subtitle Max Length"),
+                min_value=20,
+                max_value=150,
+                value=load_key("subtitle.max_length"),
+                help=t("Maximum characters per subtitle line"),
+                key="adv_max_length"
+            )
+            if max_length != load_key("subtitle.max_length"):
+                update_key("subtitle.max_length", max_length)
+
+            target_multiplier = st.number_input(
+                t("Target Multiplier"),
+                min_value=1.0,
+                max_value=2.0,
+                value=load_key("subtitle.target_multiplier"),
+                step=0.1,
+                help=t("Translated subtitle length multiplier"),
+                key="adv_multiplier"
+            )
+            if target_multiplier != load_key("subtitle.target_multiplier"):
+                update_key("subtitle.target_multiplier", target_multiplier)
+
+            max_split_length = st.number_input(
+                t("Max Split Length"),
+                min_value=10,
+                max_value=30,
+                value=load_key("max_split_length"),
+                help=t("Maximum words for initial split"),
+                key="adv_split_length"
+            )
+            if max_split_length != load_key("max_split_length"):
+                update_key("max_split_length", max_split_length)
+
+        with tabs[3]:
+            # Video settings
+            ffmpeg_gpu = st.toggle(t("FFmpeg GPU Acceleration"), value=load_key("ffmpeg_gpu"), help=t("Use h264_nvenc for faster encoding"), key="adv_ffmpeg")
+            if ffmpeg_gpu != load_key("ffmpeg_gpu"):
+                update_key("ffmpeg_gpu", ffmpeg_gpu)
+                st.rerun()
+
+            burn_subtitles_adv = st.toggle(t("Burn Subtitles"), value=load_key("burn_subtitles"), help=t("Burn subtitles into video"), key="adv_burn")
+            if burn_subtitles_adv != load_key("burn_subtitles"):
+                update_key("burn_subtitles", burn_subtitles_adv)
+                st.rerun()
+
+        with tabs[4]:
+            # Audio/Dubbing settings
+            c1, c2 = st.columns(2)
+            with c1:
+                min_speed = st.number_input(
+                    t("Min Speed Factor"),
+                    min_value=1.0,
+                    max_value=2.0,
+                    value=float(load_key("speed_factor.min")),
+                    step=0.1,
+                    help=t("Minimum audio speed"),
+                    key="adv_min_speed"
+                )
+                if min_speed != load_key("speed_factor.min"):
+                    update_key("speed_factor.min", min_speed)
+            with c2:
+                max_speed = st.number_input(
+                    t("Max Speed Factor"),
+                    min_value=1.0,
+                    max_value=2.0,
+                    value=float(load_key("speed_factor.max")),
+                    step=0.1,
+                    help=t("Maximum audio speed"),
+                    key="adv_max_speed"
+                )
+                if max_speed != load_key("speed_factor.max"):
+                    update_key("speed_factor.max", max_speed)
+
+            accept_speed = st.number_input(
+                t("Acceptable Speed Factor"),
+                min_value=1.0,
+                max_value=2.0,
+                value=float(load_key("speed_factor.accept")),
+                step=0.1,
+                help=t("Maximum acceptable speed without warning"),
+                key="adv_accept_speed"
+            )
+            if accept_speed != load_key("speed_factor.accept"):
+                update_key("speed_factor.accept", accept_speed)
+
+            c1, c2 = st.columns(2)
+            with c1:
+                min_sub_dur = st.number_input(
+                    t("Min Subtitle Duration"),
+                    min_value=0.5,
+                    max_value=10.0,
+                    value=float(load_key("min_subtitle_duration")),
+                    step=0.5,
+                    help=t("Minimum subtitle duration in seconds"),
+                    key="adv_min_sub_dur"
+                )
+                if min_sub_dur != load_key("min_subtitle_duration"):
+                    update_key("min_subtitle_duration", min_sub_dur)
+            with c2:
+                min_trim_dur = st.number_input(
+                    t("Min Trim Duration"),
+                    min_value=0.5,
+                    max_value=10.0,
+                    value=float(load_key("min_trim_duration")),
+                    step=0.5,
+                    help=t("Subtitles shorter than this won't be split"),
+                    key="adv_min_trim"
+                )
+                if min_trim_dur != load_key("min_trim_duration"):
+                    update_key("min_trim_duration", min_trim_dur)
+
+            tolerance = st.number_input(
+                t("Tolerance"),
+                min_value=0.1,
+                max_value=5.0,
+                value=float(load_key("tolerance")),
+                step=0.1,
+                help=t("Allowed extension time to next subtitle"),
+                key="adv_tolerance"
+            )
+            if tolerance != load_key("tolerance"):
+                update_key("tolerance", tolerance)
         
 def check_api():
     try:

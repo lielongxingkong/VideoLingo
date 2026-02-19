@@ -1,6 +1,5 @@
 import os, subprocess
 import pandas as pd
-from typing import Dict, List, Tuple
 from pydub import AudioSegment
 from core.utils import *
 from core.utils.models import *
@@ -46,7 +45,7 @@ def get_audio_duration(audio_file: str) -> float:
         duration = 0
     return duration
 
-def split_audio(audio_file: str, target_len: float = 30*60, win: float = 60) -> List[Tuple[float, float]]:
+def split_audio(audio_file: str, target_len: float = 30*60, win: float = 60) -> list[tuple[float, float]]:
     ## 在 [target_len-win, target_len+win] 区间内用 pydub 检测静默，切分音频
     rprint(f"[blue]🎙️ Starting audio segmentation {audio_file} {target_len} {win}[/blue]")
     audio = AudioSegment.from_file(audio_file)
@@ -84,7 +83,7 @@ def split_audio(audio_file: str, target_len: float = 30*60, win: float = 60) -> 
     rprint(f"[green]🎙️ Audio split completed {len(segments)} segments[/green]")
     return segments
 
-def process_transcription(result: Dict) -> pd.DataFrame:
+def process_transcription(result: dict) -> pd.DataFrame:
     all_words = []
     for segment in result['segments']:
         # Get speaker_id, if not exists, set to None

@@ -1,5 +1,4 @@
 import pandas as pd
-from typing import List, Tuple
 import concurrent.futures
 
 from core._3_2_split_meaning import split_sentence
@@ -30,7 +29,7 @@ def calc_len(text: str) -> float:
 
     return sum(char_weight(char) for char in text)
 
-def align_subs(src_sub: str, tr_sub: str, src_part: str) -> Tuple[List[str], List[str], str]:
+def align_subs(src_sub: str, tr_sub: str, src_part: str) -> tuple[list[str], list[str], str]:
     align_prompt = get_align_prompt(src_sub, tr_sub, src_part)
     
     def valid_align(response_data):
@@ -58,7 +57,7 @@ def align_subs(src_sub: str, tr_sub: str, src_part: str) -> Tuple[List[str], Lis
     
     return src_parts, tr_parts, tr_remerged
 
-def split_align_subs(src_lines: List[str], tr_lines: List[str]):
+def split_align_subs(src_lines: list[str], tr_lines: list[str]):
     subtitle_set = load_key("subtitle")
     MAX_SUB_LENGTH = subtitle_set["max_length"]
     TARGET_SUB_MULTIPLIER = subtitle_set["target_multiplier"]

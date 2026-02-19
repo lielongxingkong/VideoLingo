@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
-ARG PYTHON_VERSION=3.10
+ARG PYTHON_VERSION=3.12
 
 # Change software sources and install basic tools and system dependencies
 RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \

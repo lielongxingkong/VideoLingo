@@ -10,5 +10,6 @@ setup(
     name=NAME,
     version=VERSION,
     packages=find_packages(include=[NAME, f'{NAME}.*']),
-    install_requires=requirements
+    install_requires=requirements,
+    python_requires=">=3.10,<3.14"
 )

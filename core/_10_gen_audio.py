@@ -2,7 +2,6 @@ import os
 import time
 import shutil
 import subprocess
-from typing import Tuple
 
 import pandas as pd
 from pydub import AudioSegment
@@ -62,7 +61,7 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
                 rprint(f"[red]❌ Audio speed adjustment failed, max retries reached ({max_retries})[/red]")
                 raise e
 
-def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
+def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> tuple[int, float]:
     """Helper function for processing single row data"""
     number = row['number']
     lines = eval(row['lines']) if isinstance(row['lines'], str) else row['lines']

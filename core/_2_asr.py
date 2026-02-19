@@ -21,6 +21,9 @@ def transcribe():
     if runtime == "elevenlabs":
         from core.asr_backend.elevenlabs_asr import transcribe_audio_elevenlabs as ts
         rprint("[cyan]🎤 Transcribing audio with ElevenLabs API...[/cyan]")
+    elif runtime == "openai":
+        from core.asr_backend.openai_asr import transcribe_audio_openai as ts
+        rprint("[cyan]🎤 Transcribing audio with OpenAI Whisper API...[/cyan]")
     else:
         # Default to elevenlabs if runtime is invalid
         from core.asr_backend.elevenlabs_asr import transcribe_audio_elevenlabs as ts

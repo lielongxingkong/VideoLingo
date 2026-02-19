@@ -7,6 +7,13 @@ from core.utils.config_utils import load_key
 from rich import print as rprint
 from core.utils.decorator import except_handler
 
+# Try to import anthropic, but don't fail if not available
+try:
+    import anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+
 # ------------
 # cache gpt response
 # ------------
@@ -51,31 +58,66 @@ def ask_gpt(prompt, resp_type=None, valid_def=None, log_title="default"):
         return cached
 
     model = load_key("api.model")
+    api_key = load_key("api.key")
     base_url = load_key("api.base_url")
-    if 'ark' in base_url:
-        base_url = "https://ark.cn-beijing.volces.com/api/v3" # huoshan base url
-    elif 'v1' not in base_url:
-        base_url = base_url.strip('/') + '/v1'
-    client = OpenAI(api_key=load_key("api.key"), base_url=base_url)
-    response_format = {"type": "json_object"} if resp_type == "json" and load_key("api.llm_support_json") else None
+    api_format = load_key("api.format") or "openai"
 
-    messages = [{"role": "user", "content": prompt}]
+    if api_format == "anthropic":
+        # Anthropic format
+        if not ANTHROPIC_AVAILABLE:
+            raise ImportError("anthropic package is not installed. Please install it with: pip install anthropic")
 
-    params = dict(
-        model=model,
-        messages=messages,
-        response_format=response_format,
-        timeout=300
-    )
-    resp_raw = client.chat.completions.create(**params)
+        # Handle base URL for Anthropic (optional, for compatible proxies)
+        client_kwargs = {"api_key": api_key}
+        if base_url and base_url not in ["https://api.anthropic.com", ""]:
+            client_kwargs["base_url"] = base_url
 
-    # process and return full result
-    resp_content = resp_raw.choices[0].message.content
+        client = anthropic.Anthropic(**client_kwargs)
+
+        # Prepare system message if JSON mode is requested
+        system_msg = ""
+        if resp_type == "json" and load_key("api.llm_support_json"):
+            system_msg = "Please respond in JSON format."
+
+        params = dict(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=4096,
+            timeout=300
+        )
+        if system_msg:
+            params["system"] = system_msg
+
+        resp_raw = client.messages.create(**params)
+        resp_content = resp_raw.content[0].text if resp_raw.content else ""
+
+    else:
+        # OpenAI format (default)
+        if 'ark' in base_url:
+            base_url = "https://ark.cn-beijing.volces.com/api/v3" # huoshan base url
+        elif 'v1' not in base_url:
+            base_url = base_url.strip('/') + '/v1'
+        client = OpenAI(api_key=api_key, base_url=base_url)
+        response_format = {"type": "json_object"} if resp_type == "json" and load_key("api.llm_support_json") else None
+
+        messages = [{"role": "user", "content": prompt}]
+
+        params = dict(
+            model=model,
+            messages=messages,
+            response_format=response_format,
+            timeout=300
+        )
+        resp_raw = client.chat.completions.create(**params)
+
+        # process and return full result
+        resp_content = resp_raw.choices[0].message.content
+
     if resp_type == "json":
         resp = json_repair.loads(resp_content)
     else:
         resp = resp_content
-    
+
     # check if the response format is valid
     if valid_def:
         valid_resp = valid_def(resp)

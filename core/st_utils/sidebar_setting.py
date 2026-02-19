@@ -25,13 +25,24 @@ def page_setting():
     with st.expander(t("LLM Configuration"), expanded=True):
         config_input(t("API_KEY"), "api.key")
         config_input(t("BASE_URL"), "api.base_url", help=t("Openai format, will add /v1/chat/completions automatically"))
-        
+
+        # API format selection
+        api_format = st.selectbox(
+            t("API Format"),
+            options=["openai", "anthropic"],
+            index=0 if load_key("api.format") == "openai" else 1,
+            help=t("OpenAI format or Anthropic format")
+        )
+        if api_format != load_key("api.format"):
+            update_key("api.format", api_format)
+            st.rerun()
+
         c1, c2 = st.columns([4, 1])
         with c1:
             config_input(t("MODEL"), "api.model", help=t("click to check API validity")+ " 👉")
         with c2:
             if st.button("📡", key="api"):
-                st.toast(t("API Key is valid") if check_api() else t("API Key is invalid"), 
+                st.toast(t("API Key is valid") if check_api() else t("API Key is invalid"),
                         icon="✅" if check_api() else "❌")
         llm_support_json = st.toggle(t("LLM JSON Format Support"), value=load_key("api.llm_support_json"), help=t("Enable if your LLM supports JSON mode output"))
         if llm_support_json != load_key("api.llm_support_json"):
@@ -59,12 +70,15 @@ def page_setting():
                 update_key("whisper.language", langs[lang])
                 st.rerun()
 
-        runtime = st.selectbox(t("WhisperX Runtime"), options=["elevenlabs"], index=0, help=t("ElevenLabs runtime requires ElevenLabs API key"))
+        runtime = st.selectbox(t("WhisperX Runtime"), options=["elevenlabs", "openai"], index=0 if load_key("whisper.runtime") == "elevenlabs" else 1, help=t("ElevenLabs runtime requires ElevenLabs API key, OpenAI runtime uses OpenAI Whisper API"))
         if runtime != load_key("whisper.runtime"):
             update_key("whisper.runtime", runtime)
             st.rerun()
         if runtime == "elevenlabs":
             config_input(("ElevenLabs API"), "whisper.elevenlabs_api_key")
+        elif runtime == "openai":
+            config_input(t("OpenAI API Key"), "whisper.openai_api_key")
+            config_input(t("OpenAI Base URL"), "whisper.openai_base_url")
 
         with c2:
             target_language = st.text_input(t("Target Lang"), value=load_key("target_language"), help=t("Input any language in natural language, as long as llm can understand"))
@@ -77,9 +91,9 @@ def page_setting():
             update_key("burn_subtitles", burn_subtitles)
             st.rerun()
     with st.expander(t("Dubbing Settings"), expanded=True):
-        tts_methods = ["sf_fish_tts", "edge_tts", "custom_tts", "sf_cosyvoice2"]
+        tts_methods = ["sf_fish_tts", "edge_tts", "custom_tts", "sf_cosyvoice2", "openai_tts"]
         current_tts = load_key("tts_method")
-        if current_tts in ["gpt_sovits", "azure_tts", "openai_tts", "fish_tts", "f5tts"]:
+        if current_tts in ["gpt_sovits", "azure_tts", "fish_tts", "f5tts"]:
             current_tts = "edge_tts"
         select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(current_tts) if current_tts in tts_methods else 0)
         if select_tts != load_key("tts_method"):
@@ -113,6 +127,33 @@ def page_setting():
 
         elif select_tts == "sf_cosyvoice2":
             config_input(t("SiliconFlow API Key"), "sf_cosyvoice2.api_key")
+        elif select_tts == "openai_tts":
+            config_input(t("OpenAI API Key"), "openai_tts.api_key")
+            config_input(t("OpenAI Base URL"), "openai_tts.base_url")
+
+            # Voice selection
+            voice_options = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
+            current_voice = load_key("openai_tts.voice") or "alloy"
+            selected_voice = st.selectbox(
+                t("OpenAI Voice"),
+                options=voice_options,
+                index=voice_options.index(current_voice) if current_voice in voice_options else 0
+            )
+            if selected_voice != current_voice:
+                update_key("openai_tts.voice", selected_voice)
+                st.rerun()
+
+            # Model selection
+            model_options = ["tts-1", "tts-1-hd"]
+            current_model = load_key("openai_tts.model") or "tts-1"
+            selected_model = st.selectbox(
+                t("OpenAI Model"),
+                options=model_options,
+                index=model_options.index(current_model) if current_model in model_options else 0
+            )
+            if selected_model != current_model:
+                update_key("openai_tts.model", selected_model)
+                st.rerun()
         
 def check_api():
     try:

@@ -7,6 +7,7 @@ from core.tts_backend.sf_fishtts import siliconflow_fish_tts_for_videolingo
 from core.tts_backend.edge_tts import edge_tts
 from core.tts_backend.sf_cosyvoice2 import cosyvoice_tts_for_videolingo
 from core.tts_backend.custom_tts import custom_tts
+from core.tts_backend.openai_tts import openai_tts_for_videolingo
 from core.prompts import get_correct_text_prompt
 from core.utils import *
 
@@ -49,6 +50,8 @@ def tts_main(text, save_as, number, task_df):
                 custom_tts(text, save_as)
             elif TTS_METHOD == 'sf_cosyvoice2':
                 cosyvoice_tts_for_videolingo(text, save_as, number, task_df)
+            elif TTS_METHOD == 'openai_tts':
+                openai_tts_for_videolingo(text, save_as)
                 
             # Check generated audio duration
             duration = get_audio_duration(save_as)

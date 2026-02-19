@@ -106,5 +106,12 @@
     "No NVIDIA GPU detected": "No NVIDIA GPU detected",
     "No NVIDIA GPU detected or NVIDIA drivers not properly installed": "No NVIDIA GPU detected or NVIDIA drivers not properly installed",
     "LLM JSON Format Support": "LLM JSON Format Support",
-    "Enable if your LLM supports JSON mode output": "Enable if your LLM supports JSON mode output"
+    "Enable if your LLM supports JSON mode output": "Enable if your LLM supports JSON mode output",
+    "API Format": "API Format",
+    "OpenAI format or Anthropic format": "OpenAI format or Anthropic format",
+    "ElevenLabs runtime requires ElevenLabs API key, OpenAI runtime uses OpenAI Whisper API": "ElevenLabs runtime requires ElevenLabs API key, OpenAI runtime uses OpenAI Whisper API",
+    "OpenAI API Key": "OpenAI API Key",
+    "OpenAI Base URL": "OpenAI Base URL",
+    "OpenAI Voice": "OpenAI Voice",
+    "OpenAI Model": "OpenAI Model"
 }

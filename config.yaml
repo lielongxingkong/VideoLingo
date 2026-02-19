@@ -15,6 +15,8 @@ api:
   base_url: 'https://yunwu.ai'
   model: 'gpt-4.1-2025-04-14'
   llm_support_json: false
+  # API format: openai or anthropic
+  format: 'openai'
 # *Number of LLM multi-threaded accesses, set to 1 if using local LLM
 max_workers: 4
 
@@ -30,10 +32,14 @@ whisper:
   # Whisper specified recognition language ISO 639-1
   language: 'en'
   detected_language: 'en'
-  # Whisper running mode ["elevenlabs"].
+  # Whisper running mode ["elevenlabs", "openai"].
   runtime: 'elevenlabs'
   # ElevenLabs API key
   elevenlabs_api_key: 'your_elevenlabs_api_key'
+  # OpenAI API key (for OpenAI Whisper ASR, uses api.key if not set)
+  openai_api_key: ''
+  # OpenAI base URL (for OpenAI Whisper ASR, uses api.base_url if not set)
+  openai_base_url: ''
 
 # Whether to burn subtitles into the video
 burn_subtitles: true
@@ -68,8 +74,19 @@ reflect_translate: true
 pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
-# TTS selection [sf_fish_tts, edge_tts, custom_tts, sf_cosyvoice2]
+# TTS selection [sf_fish_tts, edge_tts, custom_tts, sf_cosyvoice2, openai_tts]
 tts_method: 'sf_cosyvoice2'
+
+# OpenAI TTS configuration
+openai_tts:
+  # OpenAI API key (uses api.key if not set)
+  api_key: ''
+  # OpenAI base URL (uses api.base_url if not set)
+  base_url: ''
+  # Voice: alloy, echo, fable, onyx, nova, shimmer
+  voice: 'alloy'
+  # Model: tts-1 or tts-1-hd
+  model: 'tts-1'
 
 # SiliconFlow FishTTS
 sf_fish_tts:

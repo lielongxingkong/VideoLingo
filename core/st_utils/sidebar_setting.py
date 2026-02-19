@@ -78,7 +78,7 @@ def page_setting():
         if runtime == "elevenlabs":
             config_input(("ElevenLabs API"), "whisper.elevenlabs_api_key")
         elif runtime == "openai":
-            config_input(t("OpenAI API Key"), "whisper.openai_api_key", key_suffix="whisper_api")
+            config_input(t("OpenAI API Key (Whisper)"), "whisper.openai_api_key", key_suffix="whisper_api")
             config_input(t("OpenAI Base URL"), "whisper.openai_base_url", key_suffix="whisper_url")
 
         with c2:

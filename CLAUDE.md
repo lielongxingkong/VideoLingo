@@ -89,7 +89,7 @@ The core processing follows a numbered sequence in [core/](core/):
 
 ### Configuration
 
-Main configuration file: [config.yaml](config.yaml)
+Configuration is done through the Streamlit UI settings page. All config values are stored in `session_state` with defaults defined in `core/utils/config_utils.py`.
 
 Key settings:
 - API keys and base URL

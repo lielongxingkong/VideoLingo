@@ -90,14 +90,14 @@ def transcribe_audio_elevenlabs(raw_audio_path, vocal_audio_path, start = None, 
         sf.write(temp_filepath, y_slice, sr, format='MP3')
     
     try:
-        api_key = load_key("whisper.elevenlabs_api_key")
+        api_key = load_key("asr.elevenlabs_api_key")
         base_url = "https://api.elevenlabs.io/v1/speech-to-text"
         headers = {"xi-api-key": api_key}
-        
+
         data = {
             "model_id": "scribe_v1",
             "timestamps_granularity": "word",
-            "language_code": load_key("whisper.language"),
+            "language_code": load_key("asr.language"),
             "diarize": True,
             "num_speakers": None,
             "tag_audio_events": False
@@ -113,7 +113,7 @@ def transcribe_audio_elevenlabs(raw_audio_path, vocal_audio_path, start = None, 
 
         # save detected language
         detected_language = iso_639_2_to_1.get(result["language_code"], result["language_code"])
-        update_key("whisper.detected_language", detected_language)
+        update_key("asr.detected_language", detected_language)
 
         # Adjust timestamps for all words by adding the start time
         if start is not None and 'words' in result:

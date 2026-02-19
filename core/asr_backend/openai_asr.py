@@ -122,11 +122,11 @@ def transcribe_audio_openai(raw_audio_path, vocal_audio_path, start=None, end=No
 
     try:
         # Get API configuration
-        api_key = load_key("whisper.openai_api_key") or load_key("api.key")
-        base_url = load_key("whisper.openai_base_url") or load_key("api.base_url")
+        api_key = load_key("asr.openai_api_key") or load_key("api.key")
+        base_url = load_key("asr.openai_base_url") or load_key("api.base_url")
 
         if not api_key:
-            raise ValueError("OpenAI API key is not set. Please set either whisper.openai_api_key or api.key in config.yaml")
+            raise ValueError("OpenAI API key is not set. Please set either asr.openai_api_key or api.key in the Streamlit settings page")
 
         # Handle base URL
         if not base_url or base_url == "":
@@ -135,7 +135,7 @@ def transcribe_audio_openai(raw_audio_path, vocal_audio_path, start=None, end=No
             base_url = base_url.strip('/') + '/v1'
 
         client = OpenAI(api_key=api_key, base_url=base_url)
-        language = load_key("whisper.language")
+        language = load_key("asr.language")
 
         with open(temp_filepath, 'rb') as audio_file:
             start_time = time.time()
@@ -157,7 +157,7 @@ def transcribe_audio_openai(raw_audio_path, vocal_audio_path, start=None, end=No
             # Save detected language
             if 'language' in transcript_dict:
                 detected_lang = transcript_dict['language']
-                update_key("whisper.detected_language", detected_lang)
+                update_key("asr.detected_language", detected_lang)
 
             # Extract words
             words = transcript_dict.get('words', [])

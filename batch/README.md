@@ -2,7 +2,7 @@
 
 [English](./README.md) | [简体中文](./README.zh.md)
 
-Before utilizing the batch mode, ensure you have used the Streamlit mode and properly configured the parameters in `config.yaml`.
+Before utilizing the batch mode, ensure you have used the Streamlit mode and properly configured the parameters in the Settings page.
 
 ## Usage Guide
 
@@ -41,7 +41,7 @@ Example:
 
 ### Handling Interruptions
 
-If the command line is closed unexpectedly, language settings in `config.yaml` may be altered. Check settings before retrying.
+If the command line is closed unexpectedly, language settings may need to be reconfigured. Check settings before retrying.
 
 ### Error Management
 

@@ -1,7 +1,7 @@
 # 🚀 Getting Started
 
 ## 📋 API Configuration
-VideoLingo requires an LLM and TTS(optional). For the best quality, use claude-3-5-sonnet-20240620 with Azure TTS. Alternatively, for a fully local setup with no API key needed, use Ollama for the LLM and Edge TTS for dubbing. In this case, set `max_workers` to 1 and `summary_length` to a low value like 2000 in `config.yaml`.
+VideoLingo requires an LLM and TTS(optional). For the best quality, use claude-3-5-sonnet-20240620 with Azure TTS. Alternatively, for a fully local setup with no API key needed, use Ollama for the LLM and Edge TTS for dubbing. In this case, set `max_workers` to 1 and `summary_length` to a low value like 2000 in the Settings page.
 
 ### 1. **Get API_KEY for LLM**:
 
@@ -45,7 +45,7 @@ Currently supports 3 modes:
 <details>
 <summary>How to choose OpenAI voices?</summary>
 
-Voice list can be found on the [official website](https://platform.openai.com/docs/guides/text-to-speech/voice-options), such as `alloy`, `echo`, `nova`, etc. Modify `openai_tts.voice` in `config.yaml`.
+Voice list can be found on the [official website](https://platform.openai.com/docs/guides/text-to-speech/voice-options), such as `alloy`, `echo`, `nova`, etc. Modify `openai_tts.voice` in the Settings page.
 
 </details>
 <details>
@@ -58,7 +58,7 @@ Recommended to try voices in the [online demo](https://speech.microsoft.com/port
 <details>
 <summary>How to choose Fish TTS voices?</summary>
 
-Go to the [official website](https://fish.audio/en/) to listen and choose voices. Find the voice code in the URL, e.g. Dingzhen is `54a5170264694bfc8e9ad98df7bd89c3`. Popular voices are already added in `config.yaml`. To use other voices, modify the `fish_tts.character_id_dict` dictionary in `config.yaml`.
+Go to the [official website](https://fish.audio/en/) to listen and choose voices. Find the voice code in the URL, e.g. Dingzhen is `54a5170264694bfc8e9ad98df7bd89c3`. Note: Fish TTS has been deprecated in recent versions.
 
 </details>
 
@@ -156,7 +156,7 @@ Before installing VideoLingo, ensure you have installed Git and Anaconda.
 
    ![tutorial](./en_page.png)
 
-6. (Optional) More settings can be manually modified in `config.yaml`, watch command line output during operation. To use custom terms, add them to `custom_terms.xlsx` before processing, e.g. `Baguette | French bread | Not just any bread!`.
+6. (Optional) More settings can be modified in the Settings page, watch command line output during operation. To use custom terms, add them to `custom_terms.xlsx` before processing, e.g. `Baguette | French bread | Not just any bread!`.
 
 > Need help? Our [AI Assistant](https://share.fastgpt.in/chat/share?shareId=066w11n3r9aq6879r4z0v9rh) is here to guide you through any issues!
 

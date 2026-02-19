@@ -72,7 +72,7 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动执行一系
 
 *   `core/prompts.py`: 定义标准化的提示模板，用于指导 LLM（GPT）完成诸如句子拆分、摘要、翻译（忠实性/表达性）、字幕对齐以及文本优化/校正以进行 TTS 等任务。
 *   `core/utils/ask_gpt.py`: 提供一个强大的接口（`ask_gpt` 函数）用于与 OpenAI GPT 模型交互。 包括缓存（基于文件）、JSON 响应修复 (`json_repair`)、响应验证、带重试的错误处理 (`@except_handler`) 和日志记录。
-*   `core/utils/config_utils.py`: 实用程序函数 (`load_key`, `update_key`)，用于使用 `ruamel.yaml`（保留格式）和 `threading.Lock` 以线程安全的方式从 `config.yaml` 加载和更新配置设置。包括 `get_joiner` 用于特定语言的文本连接。
+*   `core/utils/config_utils.py`: 实用程序函数 (`load_key`, `update_key`)，用于加载和更新配置设置。配置现在存储在 Streamlit `session_state` 中，默认值在 `DEFAULT_CONFIG` 字典中定义。包括 `get_joiner` 用于特定语言的文本连接。
 *   `core/utils/decorator.py`: 定义可重用的装饰器：`except_handler` 用于向函数添加重试逻辑和错误报告，`check_file_exists` 用于如果输出文件已存在则跳过函数执行。 使用 `rich` 进行格式化的输出。
 *   `core/utils/delete_retry_dubbing.py`: 提供一个函数 (`delete_dubbing_files`) 来清理与配音过程相关的特定中间文件和目录（例如，`dub.wav`、`output_dub.mp4`、`output/audio/segs`）。
 *   `core/utils/onekeycleanup.py`: 实现 `cleanup` 函数，用于将文件从 `output` 目录组织和归档到基于视频名称的结构化的 `history` 目录中。包括文件名清理和强大的文件移动/删除逻辑。
@@ -90,7 +90,7 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动执行一系
 **9. Streamlit 界面模块 (`core/st_utils`, `st.py`):**
 
 *   `core/st_utils/download_video_section.py`: 实现用于选择输入视频的 Streamlit UI 部分，允许用户从 YouTube 下载（使用 `core/_1_ytdlp.py`）或上传本地文件（视频或音频，使用 `ffmpeg` 进行音频到视频的转换）。
-*   `core/st_utils/sidebar_setting.py`: 在 Streamlit UI 中创建配置侧边栏。 允许用户设置显示语言、LLM 参数（API 密钥、模型、基本 URL）、字幕设置（识别/目标语言、Demucs 开关、烧录开关）和配音设置（TTS 方法和相关参数，如语音、API 密钥）。使用 `core/utils/config_utils.py` 加载/保存设置，并在更改时触发 `st.rerun()`。包括 API 密钥验证。
+*   `core/st_utils/sidebar_setting.py`: 在 Streamlit UI 中创建配置侧边栏。 允许用户设置显示语言、LLM 参数（API 密钥、模型、基本 URL）、字幕设置（识别/目标语言、Demucs 开关、烧录开关）和配音设置（TTS 方法和相关参数，如语音、API 密钥）。设置存储在 `session_state` 中，支持将配置导入/导出为 JSON。在更改时触发 `st.rerun()`。包括 API 密钥验证。
 *   `core/st_utils/imports_and_utils.py`: 包含 Streamlit 应用程序的通用导入和实用程序函数，例如创建压缩字幕文件的下载按钮的函数以及按钮的 CSS 样式。
 *   `st.py`: Streamlit Web 应用程序的主要入口点。设置页面配置，显示徽标，使用 `sidebar_setting.py` 创建侧边栏，管理主 UI 部分（通过 `download_video_section.py` 进行视频下载/上传，文本处理，音频处理），并根据用户交互（按钮点击）触发核心处理函数（`process_text`，`process_audio`）。使用 `st.spinner` 指示长时间操作期间的进度。
 

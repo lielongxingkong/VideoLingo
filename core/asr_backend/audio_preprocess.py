@@ -155,4 +155,4 @@ def save_results(df: pd.DataFrame):
     rprint(f"[green]📊 Excel file saved to {_2_CLEANED_CHUNKS}[/green]")
 
 def save_language(language: str):
-    update_key("whisper.detected_language", language)
+    update_key("asr.detected_language", language)

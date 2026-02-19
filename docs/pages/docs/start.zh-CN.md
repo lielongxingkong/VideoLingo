@@ -1,7 +1,7 @@
 # 🚀 开始使用
 
 ## 📋 API 配置指南
-本项目需使用大模型和 TTS。追求最佳质量请使用 claude-3-5-sonnet-20240620 与 Azure TTS。也可以选择完全本地化体验，使用 Ollama 作为大模型，Edge TTS 作为配音，无需任何 API key（此时需要在 `config.yaml` 中将 `max_workers` 设为 1，`summary_length` 调低至 2000）。
+本项目需使用大模型和 TTS。追求最佳质量请使用 claude-3-5-sonnet-20240620 与 Azure TTS。也可以选择完全本地化体验，使用 Ollama 作为大模型，Edge TTS 作为配音，无需任何 API key（此时需要在设置页面将 `max_workers` 设为 1，`summary_length` 调低至 2000）。
 
 ### 1. **大模型的 API_KEY**：
 
@@ -45,7 +45,7 @@ VideoLingo提供了多种 tts 接入方式，以下是对比（如不使用配�
 <details>
 <summary>OpenAI 声音怎么选？</summary>
 
-声音列表可以在 [官网](https://platform.openai.com/docs/guides/text-to-speech/voice-options) 找到，例如 `alloy`, `echo`, `nova`等，在 `config.yaml` 中修改 `openai_tts.voice` 即可。
+声音列表可以在 [官网](https://platform.openai.com/docs/guides/text-to-speech/voice-options) 找到，例如 `alloy`, `echo`, `nova`等，在设置页面修改 `openai_tts.voice` 即可。
 
 </details>
 <details>
@@ -58,7 +58,7 @@ VideoLingo提供了多种 tts 接入方式，以下是对比（如不使用配�
 <details>
 <summary>Fish TTS 声音怎么选？</summary>
 
-前往 [官网](https://fish.audio/zh-CN/) 中试听选择你想要的声音，在 URL 中可以找到该声音对应的代号，例如丁真是 `54a5170264694bfc8e9ad98df7bd89c3`，热门的几种声音已添加在 `config.yaml` 中。如需使用其他声音，请在 `config.yaml` 中修改 `fish_tts.character_id_dict` 字典。
+前往 [官网](https://fish.audio/zh-CN/) 中试听选择你想要的声音，在 URL 中可以找到该声音对应的代号，例如丁真是 `54a5170264694bfc8e9ad98df7bd89c3`。注意：Fish TTS 在最新版本中已被弃用。
 
 </details>
 
@@ -156,7 +156,7 @@ VideoLingo 支持 Windows、macOS 和 Linux 系统，可使用 CPU 或 GPU 运�
 
    ![tutorial](./zh_page.png)
 
-6. （可选）更多设置可以在 `config.yaml` 中手动修改，运行过程请注意命令行输出。如需使用自定义术语，请在处理前将术语添加到 `custom_terms.xlsx` 中，例如 `Biden | 登子 | 美国的瞌睡总统`。
+6. （可选）更多设置可以在设置页面中修改，运行过程请注意命令行输出。如需使用自定义术语，请在处理前将术语添加到 `custom_terms.xlsx` 中，例如 `Biden | 登子 | 美国的瞌睡总统`。
 
 > 需要帮助？我们的 [AI助手](https://share.fastgpt.in/chat/share?shareId=066w11n3r9aq6879r4z0v9rh) 随时解答问题！
 

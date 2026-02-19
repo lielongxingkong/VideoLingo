@@ -12,11 +12,11 @@ import shutil
 console = Console()
 
 def record_and_update_config(source_language, target_language):
-    original_source_lang = load_key('whisper.language')
+    original_source_lang = load_key('asr.language')
     original_target_lang = load_key('target_language')
-    
+
     if source_language and not pd.isna(source_language):
-        update_key('whisper.language', source_language)
+        update_key('asr.language', source_language)
     if target_language and not pd.isna(target_language):
         update_key('target_language', target_language)
     
@@ -78,7 +78,7 @@ def process_batch():
                 status_msg = f"Error: Unhandled exception - {str(e)}"
                 console.print(f"[bold red]Error processing {video_file}: {status_msg}")
             finally:
-                update_key('whisper.language', original_source_lang)
+                update_key('asr.language', original_source_lang)
                 update_key('target_language', original_target_lang)
                 
                 df.at[index, 'Status'] = status_msg

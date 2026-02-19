@@ -17,7 +17,7 @@ def openai_tts_for_videolingo(text, save_as):
     model = load_key("openai_tts.model") or "tts-1"
 
     if not api_key:
-        raise ValueError("OpenAI API key is not set. Please set either openai_tts.api_key or api.key in config.yaml")
+        raise ValueError("OpenAI API key is not set. Please set either openai_tts.api_key or api.key in the Streamlit settings page")
 
     # Handle base URL
     if not base_url or base_url == "":

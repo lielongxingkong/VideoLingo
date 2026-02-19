@@ -15,8 +15,8 @@ SPLIT_BY_CONNECTOR_FILE = "output/log/split_by_connector.txt"
 
 def simple_split_by_mark():
     """Split text by sentence-ending punctuation marks."""
-    whisper_language = load_key("whisper.language")
-    language = load_key("whisper.detected_language") if whisper_language == 'auto' else whisper_language
+    asr_language = load_key("asr.language")
+    language = load_key("asr.detected_language") if asr_language == 'auto' else asr_language
     joiner = get_joiner(language)
     rprint(f"[blue]🔍 Using {language} language joiner: '{joiner}'[/blue]")
 
@@ -129,8 +129,8 @@ def simple_split_long_sentences():
     with open(SPLIT_BY_CONNECTOR_FILE, "r", encoding="utf-8") as f:
         sentences = [line.strip() for line in f if line.strip()]
 
-    whisper_language = load_key("whisper.language")
-    language = load_key("whisper.detected_language") if whisper_language == 'auto' else whisper_language
+    asr_language = load_key("asr.language")
+    language = load_key("asr.detected_language") if asr_language == 'auto' else asr_language
     joiner = get_joiner(language)
 
     result = []
@@ -190,9 +190,9 @@ def simple_split_long_sentences():
 
 def simple_tokenize(text: str) -> list[str]:
     """Lightweight tokenizer using regex."""
-    language = load_key("whisper.language")
+    language = load_key("asr.language")
     if language == 'auto':
-        language = load_key("whisper.detected_language")
+        language = load_key("asr.detected_language")
 
     if language in ['zh', 'ja', 'ko']:
         # For CJK, just return individual characters as approximation

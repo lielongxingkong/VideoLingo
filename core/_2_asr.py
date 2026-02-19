@@ -17,7 +17,7 @@ def transcribe():
 
     # 4. Transcribe audio by clips
     all_results = []
-    runtime = load_key("whisper.runtime")
+    runtime = load_key("asr.runtime")
     if runtime == "elevenlabs":
         from core.asr_backend.elevenlabs_asr import transcribe_audio_elevenlabs as ts
         rprint("[cyan]🎤 Transcribing audio with ElevenLabs API...[/cyan]")

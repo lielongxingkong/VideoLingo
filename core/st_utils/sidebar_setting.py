@@ -3,9 +3,10 @@ from translations.translations import translate as t
 from translations.translations import DISPLAY_LANGUAGES
 from core.utils import *
 
-def config_input(label, key, help=None):
+def config_input(label, key, help=None, key_suffix=None):
     """Generic config input handler"""
-    val = st.text_input(label, value=load_key(key), help=help)
+    unique_key = f"{key}_{key_suffix}" if key_suffix else key
+    val = st.text_input(label, value=load_key(key), help=help, key=unique_key)
     if val != load_key(key):
         update_key(key, val)
     return val
@@ -77,8 +78,8 @@ def page_setting():
         if runtime == "elevenlabs":
             config_input(("ElevenLabs API"), "whisper.elevenlabs_api_key")
         elif runtime == "openai":
-            config_input(t("OpenAI API Key"), "whisper.openai_api_key")
-            config_input(t("OpenAI Base URL"), "whisper.openai_base_url")
+            config_input(t("OpenAI API Key"), "whisper.openai_api_key", key_suffix="whisper_api")
+            config_input(t("OpenAI Base URL"), "whisper.openai_base_url", key_suffix="whisper_url")
 
         with c2:
             target_language = st.text_input(t("Target Lang"), value=load_key("target_language"), help=t("Input any language in natural language, as long as llm can understand"))
@@ -105,8 +106,8 @@ def page_setting():
             config_input(t("Edge TTS Voice"), "edge_tts.voice")
 
         elif select_tts == "openai_tts":
-            config_input(t("OpenAI API Key"), "openai_tts.api_key")
-            config_input(t("OpenAI Base URL"), "openai_tts.base_url")
+            config_input(t("OpenAI API Key"), "openai_tts.api_key", key_suffix="tts_api")
+            config_input(t("OpenAI Base URL"), "openai_tts.base_url", key_suffix="tts_url")
 
             # Voice selection
             voice_options = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]

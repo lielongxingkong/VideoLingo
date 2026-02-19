@@ -75,7 +75,7 @@ pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
 # TTS selection [edge_tts, custom_tts, openai_tts]
-tts_method: 'openai_tts'
+tts_method: 'custom_tts'
 
 # OpenAI TTS configuration
 openai_tts:

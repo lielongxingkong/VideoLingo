@@ -7,6 +7,7 @@ __all__ = [
     'update_key',
     'cleanup',
     'delete_dubbing_files',
+    'get_logger',
     '_1_ytdlp',
     '_2_asr',
     '_3_1_split_nlp',
@@ -26,7 +27,10 @@ __all__ = [
 
 # Lazy import on first access
 def __getattr__(name):
-    if name in ['ask_gpt', 'load_key', 'update_key']:
+    if name == 'get_logger':
+        from .logger import get_logger
+        return get_logger
+    elif name in ['ask_gpt', 'load_key', 'update_key']:
         from .utils import ask_gpt, load_key, update_key
         if name == 'ask_gpt':
             return ask_gpt

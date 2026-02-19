@@ -1,7 +1,8 @@
 from openai import OpenAI
 from pathlib import Path
-from core.utils import *
+from core.utils.config_utils import load_key
 from core.utils.decorator import except_handler
+from rich import print as rprint
 
 
 @except_handler("Failed to generate audio using OpenAI TTS")
@@ -37,5 +38,5 @@ def openai_tts_for_videolingo(text, save_as):
     ) as response:
         response.stream_to_file(save_path)
 
-    print(f"音频已成功保存至: {save_path}")
+    rprint(f"音频已成功保存至: {save_path}")
     return True

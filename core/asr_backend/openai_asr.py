@@ -6,7 +6,7 @@ import librosa
 import soundfile as sf
 from openai import OpenAI
 from rich import print as rprint
-from core.utils import *
+from core.utils.config_utils import load_key, update_key
 
 
 # ----------------------------

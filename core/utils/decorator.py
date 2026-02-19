@@ -1,7 +1,7 @@
 import functools
 import time
 import os
-from rich import print as rprint
+from core.logger import get_logger
 
 # ------------------------------
 # retry decorator
@@ -11,13 +11,14 @@ def except_handler(error_msg, retry=0, delay=1, default_return=None):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            logger = get_logger(func.__name__)
             last_exception = None
             for i in range(retry + 1):
                 try:
                     return func(*args, **kwargs)
                 except Exception as e:
                     last_exception = e
-                    rprint(f"[red]{error_msg}: {e}, retry: {i+1}/{retry}[/red]")
+                    logger.error(f"{error_msg}: {e}, retry: {i+1}/{retry}")
                     if i == retry:
                         if default_return is not None:
                             return default_return
@@ -35,8 +36,9 @@ def check_file_exists(file_path):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            logger = get_logger(func.__name__)
             if os.path.exists(file_path):
-                rprint(f"[yellow]⚠️ File <{file_path}> already exists, skip <{func.__name__}> step.[/yellow]")
+                logger.warning(f"File <{file_path}> already exists, skip <{func.__name__}> step.")
                 return
             return func(*args, **kwargs)
         return wrapper

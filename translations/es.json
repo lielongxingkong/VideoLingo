@@ -1,4 +1,11 @@
 {
+    "Configuration Management": "Gestión de configuración",
+    "Export Configuration": "Exportar configuración",
+    "Import Configuration": "Importar configuración",
+    "Apply Configuration": "Aplicar configuración",
+    "Download Config": "Descargar configuración",
+    "Error importing configuration": "Error al importar configuración",
+    "Configuration applied successfully!": "¡Configuración aplicada con éxito!",
     "a. Download or Upload Video": "a. Descargar o subir video",
     "Delete and Reselect": "Eliminar y volver a seleccionar",
     "Enter YouTube link:": "Ingrese el enlace de YouTube:",
@@ -106,5 +113,9 @@
     "No NVIDIA GPU detected": "No se detectó GPU NVIDIA",
     "No NVIDIA GPU detected or NVIDIA drivers not properly installed": "No se detectó GPU NVIDIA o los controladores NVIDIA no están instalados correctamente",
     "LLM JSON Format Support": "Soporte de formato JSON para LLM",
-    "Enable if your LLM supports JSON mode output": "Activar si su LLM admite salida en modo JSON"
+    "Enable if your LLM supports JSON mode output": "Activar si su LLM admite salida en modo JSON",
+    "Save Configuration": "Save",
+    "Load Configuration": "Load",
+    "Config File Path": "Config File Path",
+    "Path to save/load configuration file": "Path to save/load configuration file"
 }

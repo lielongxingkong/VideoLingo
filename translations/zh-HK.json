@@ -1,4 +1,11 @@
 {
+    "Configuration Management": "配置管理",
+    "Export Configuration": "導出配置",
+    "Import Configuration": "導入配置",
+    "Apply Configuration": "應用配置",
+    "Download Config": "下載配置",
+    "Error importing configuration": "導入配置錯誤",
+    "Configuration applied successfully!": "配置應用成功!",
     "a. Download or Upload Video": "a. 下載或上傳影片",
     "Delete and Reselect": "刪除並重新選擇",
     "Enter YouTube link:": "輸入YouTube連結:",
@@ -106,5 +113,9 @@
     "No NVIDIA GPU detected": "未檢測到NVIDIA GPU",
     "No NVIDIA GPU detected or NVIDIA drivers not properly installed": "未檢測到NVIDIA GPU或NVIDIA驅動未正確安裝",
     "LLM JSON Format Support": "LLM JSON格式支持",
-    "Enable if your LLM supports JSON mode output": "如果選用的LLM支持JSON模式輸出，請啟用"
+    "Enable if your LLM supports JSON mode output": "如果選用的LLM支持JSON模式輸出，請啟用",
+    "Save Configuration": "Save",
+    "Load Configuration": "Load",
+    "Config File Path": "Config File Path",
+    "Path to save/load configuration file": "Path to save/load configuration file"
 }

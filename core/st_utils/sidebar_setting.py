@@ -1,41 +1,82 @@
 import streamlit as st
+import json
 from translations.translations import translate as t
 from translations.translations import DISPLAY_LANGUAGES
+from core.utils.config_utils import DEFAULT_CONFIG, load_key, update_key, save_config_to_file, load_config_from_file
 from core.utils import *
 
-def config_input(label, key, help=None, key_suffix=None):
+def config_input(label, key, help=None, key_suffix=None, placeholder=None):
     """Generic config input handler"""
     unique_key = f"{key}_{key_suffix}" if key_suffix else key
-    val = st.text_input(label, value=load_key(key), help=help, key=unique_key)
-    if val != load_key(key):
-        update_key(key, val)
-    return val
+    # Get initial value from our config
+    initial_value = load_key(key)
+    # Text input - Streamlit auto-manages state via key
+    result = st.text_input(label, value=initial_value, placeholder=placeholder, help=help, key=unique_key)
+    # Always update config with current value from widget
+    if result != initial_value:
+        update_key(key, result)
+    return result
 
 def page_setting():
+    # Initialize session state with defaults
+    if "config" not in st.session_state:
+        st.session_state.config = DEFAULT_CONFIG.copy()
 
-    display_language = st.selectbox("Display Language 🌐", 
+    # Configuration management
+    with st.expander(t("Configuration Management") + " 💾", expanded=False):
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button(t("Save Configuration"), key="save_config"):
+                success, result = save_config_to_file()
+                if success:
+                    st.success(f"Saved to: {result}")
+                else:
+                    st.error(f"Error: {result}")
+        with col2:
+            if st.button(t("Load Configuration"), key="load_config"):
+                success, result = load_config_from_file()
+                if success:
+                    st.success(f"Loaded from: {result}")
+                    st.rerun()
+                else:
+                    st.error(f"Error: {result}")
+
+    current_display_lang = load_key("display_language")
+    if "prev_display_language" not in st.session_state:
+        st.session_state.prev_display_language = current_display_lang
+
+    display_language = st.selectbox("Display Language 🌐",
                                   options=list(DISPLAY_LANGUAGES.keys()),
-                                  index=list(DISPLAY_LANGUAGES.values()).index(load_key("display_language")))
-    if DISPLAY_LANGUAGES[display_language] != load_key("display_language"):
+                                  index=list(DISPLAY_LANGUAGES.values()).index(current_display_lang),
+                                  key="display_lang_selectbox")
+    if DISPLAY_LANGUAGES[display_language] != st.session_state.prev_display_language:
         update_key("display_language", DISPLAY_LANGUAGES[display_language])
+        st.session_state.prev_display_language = DISPLAY_LANGUAGES[display_language]
         st.rerun()
 
     # with st.expander(t("Youtube Settings"), expanded=True):
     #     config_input(t("Cookies Path"), "youtube.cookies_path")
 
     with st.expander(t("LLM Configuration"), expanded=True):
-        config_input(t("API_KEY"), "api.key")
-        config_input(t("BASE_URL"), "api.base_url", help=t("Openai format, will add /v1/chat/completions automatically"))
+        config_input(t("API_KEY"), "api.key", placeholder="sk-...")
+        config_input(t("BASE_URL"), "api.base_url", help=t("Openai format, will add /v1/chat/completions automatically"), placeholder="https://api.openai.com/v1")
 
         # API format selection
+        current_api_format = load_key("api.format")
+        # Track previous value to avoid rerun loop
+        if "prev_api_format" not in st.session_state:
+            st.session_state.prev_api_format = current_api_format
+
         api_format = st.selectbox(
             t("API Format"),
             options=["openai", "anthropic"],
-            index=0 if load_key("api.format") == "openai" else 1,
-            help=t("OpenAI format or Anthropic format")
+            index=0 if current_api_format == "openai" else 1,
+            help=t("OpenAI format or Anthropic format"),
+            key="api_format_selectbox"
         )
-        if api_format != load_key("api.format"):
+        if api_format != st.session_state.prev_api_format:
             update_key("api.format", api_format)
+            st.session_state.prev_api_format = api_format
             st.rerun()
 
         c1, c2 = st.columns([4, 1])
@@ -62,24 +103,35 @@ def page_setting():
                 "🇮🇹 Italiano": "it",
                 "🇯🇵 日本語": "ja"
             }
+            current_asr_lang = load_key("asr.language")
+            if "prev_asr_language" not in st.session_state:
+                st.session_state.prev_asr_language = current_asr_lang
+
             lang = st.selectbox(
                 t("Recog Lang"),
                 options=list(langs.keys()),
-                index=list(langs.values()).index(load_key("whisper.language"))
+                index=list(langs.values()).index(current_asr_lang),
+                key="asr_lang_selectbox"
             )
-            if langs[lang] != load_key("whisper.language"):
-                update_key("whisper.language", langs[lang])
+            if langs[lang] != st.session_state.prev_asr_language:
+                update_key("asr.language", langs[lang])
+                st.session_state.prev_asr_language = langs[lang]
                 st.rerun()
 
-        runtime = st.selectbox(t("WhisperX Runtime"), options=["elevenlabs", "openai"], index=0 if load_key("whisper.runtime") == "elevenlabs" else 1, help=t("ElevenLabs runtime requires ElevenLabs API key, OpenAI runtime uses OpenAI Whisper API"))
-        if runtime != load_key("whisper.runtime"):
-            update_key("whisper.runtime", runtime)
+        current_asr_runtime = load_key("asr.runtime")
+        if "prev_asr_runtime" not in st.session_state:
+            st.session_state.prev_asr_runtime = current_asr_runtime
+
+        runtime = st.selectbox(t("ASR Service"), options=["elevenlabs", "openai"], index=0 if current_asr_runtime == "elevenlabs" else 1, help=t("ElevenLabs ASR or OpenAI Whisper API"), key="asr_runtime_selectbox")
+        if runtime != st.session_state.prev_asr_runtime:
+            update_key("asr.runtime", runtime)
+            st.session_state.prev_asr_runtime = runtime
             st.rerun()
         if runtime == "elevenlabs":
-            config_input(("ElevenLabs API"), "whisper.elevenlabs_api_key")
+            config_input(("ElevenLabs API"), "asr.elevenlabs_api_key", placeholder="sk_...")
         elif runtime == "openai":
-            config_input(t("OpenAI API Key (Whisper)"), "whisper.openai_api_key", key_suffix="whisper_api")
-            config_input(t("OpenAI Base URL"), "whisper.openai_base_url", key_suffix="whisper_url")
+            config_input(t("OpenAI API Key (ASR)"), "asr.openai_api_key", key_suffix="asr_api", placeholder="sk-...")
+            config_input(t("OpenAI Base URL"), "asr.openai_base_url", key_suffix="asr_url", placeholder="https://api.openai.com/v1")
 
         with c2:
             target_language = st.text_input(t("Target Lang"), value=load_key("target_language"), help=t("Input any language in natural language, as long as llm can understand"))
@@ -94,68 +146,68 @@ def page_setting():
     with st.expander(t("Dubbing Settings"), expanded=True):
         tts_methods = ["edge_tts", "custom_tts", "openai_tts"]
         current_tts = load_key("tts_method")
-        select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(current_tts) if current_tts in tts_methods else 0)
-        if select_tts != load_key("tts_method"):
+        if "prev_tts_method" not in st.session_state:
+            st.session_state.prev_tts_method = current_tts
+
+        select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(current_tts) if current_tts in tts_methods else 0, key="tts_method_selectbox")
+        if select_tts != st.session_state.prev_tts_method:
             update_key("tts_method", select_tts)
+            st.session_state.prev_tts_method = select_tts
             st.rerun()
 
         # sub settings for each tts method
         if select_tts == "edge_tts":
-            config_input(t("Edge TTS Voice"), "edge_tts.voice")
+            config_input(t("Edge TTS Voice"), "edge_tts.voice", placeholder="zh-CN-XiaoxiaoNeural")
 
         elif select_tts == "openai_tts":
-            config_input(t("OpenAI API Key"), "openai_tts.api_key", key_suffix="tts_api")
-            config_input(t("OpenAI Base URL"), "openai_tts.base_url", key_suffix="tts_url")
+            config_input(t("OpenAI API Key"), "openai_tts.api_key", key_suffix="tts_api", placeholder="sk-...")
+            config_input(t("OpenAI Base URL"), "openai_tts.base_url", key_suffix="tts_url", placeholder="https://api.openai.com/v1")
 
             # Voice selection
             voice_options = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
             current_voice = load_key("openai_tts.voice") or "alloy"
+            if "prev_openai_voice" not in st.session_state:
+                st.session_state.prev_openai_voice = current_voice
+
             selected_voice = st.selectbox(
                 t("OpenAI Voice"),
                 options=voice_options,
-                index=voice_options.index(current_voice) if current_voice in voice_options else 0
+                index=voice_options.index(current_voice) if current_voice in voice_options else 0,
+                key="openai_voice_selectbox"
             )
-            if selected_voice != current_voice:
-                update_key("openai_tts.voice", selected_voice)
-                st.rerun()
-
             # Model selection
             model_options = ["tts-1", "tts-1-hd"]
             current_model = load_key("openai_tts.model") or "tts-1"
+            if "prev_openai_model" not in st.session_state:
+                st.session_state.prev_openai_model = current_model
+
             selected_model = st.selectbox(
                 t("OpenAI Model"),
                 options=model_options,
-                index=model_options.index(current_model) if current_model in model_options else 0
+                index=model_options.index(current_model) if current_model in model_options else 0,
+                key="openai_model_selectbox"
             )
-            if selected_model != current_model:
+            if selected_model != st.session_state.prev_openai_model:
                 update_key("openai_tts.model", selected_model)
+                st.session_state.prev_openai_model = selected_model
                 st.rerun()
 
     # Advanced Settings
     with st.expander(t("Advanced Settings ⚙️"), expanded=False):
         # Use tabs instead of nested expanders
-        tab_names = [t("Whisper/ASR"), t("LLM"), t("Subtitle"), t("Video"), t("Audio")]
+        tab_names = [t("General"), t("LLM"), t("Subtitle"), t("Video"), t("Audio")]
         tabs = st.tabs(tab_names)
 
         with tabs[0]:
-            # Whisper & ASR settings
-            whisper_models = ["large-v3", "large-v3-turbo"]
-            current_model = load_key("whisper.model") or "large-v3"
-            selected_model = st.selectbox(
-                t("Whisper Model"),
-                options=whisper_models,
-                index=whisper_models.index(current_model) if current_model in whisper_models else 0,
-                help=t("Whisper model selection"),
-                key="adv_whisper_model"
+            # General settings
+            config_file_path = st.text_input(
+                t("Config File Path"),
+                value=load_key("config_file_path"),
+                help=t("Path to save/load configuration file"),
+                key="adv_config_file_path"
             )
-            if selected_model != current_model:
-                update_key("whisper.model", selected_model)
-                st.rerun()
-
-            demucs = st.toggle(t("Demucs Vocal Separation"), value=load_key("demucs"), help=t("Use Demucs for vocal separation before transcription"), key="adv_demucs")
-            if demucs != load_key("demucs"):
-                update_key("demucs", demucs)
-                st.rerun()
+            if config_file_path != load_key("config_file_path"):
+                update_key("config_file_path", config_file_path)
 
         with tabs[1]:
             # LLM settings
@@ -317,14 +369,14 @@ def page_setting():
             )
             if tolerance != load_key("tolerance"):
                 update_key("tolerance", tolerance)
-        
+
 def check_api():
     try:
-        resp = ask_gpt("This is a test, response 'message':'success' in json format.", 
+        resp = ask_gpt("This is a test, response 'message':'success' in json format.",
                       resp_type="json", log_title='None')
         return resp.get('message') == 'success'
     except Exception:
         return False
-    
+
 if __name__ == "__main__":
     check_api()

@@ -1,4 +1,9 @@
 {
+    "Configuration Management": "配置管理",
+    "Save Configuration": "保存",
+    "Load Configuration": "加载",
+    "Config File Path": "配置文件路径",
+    "Path to save/load configuration file": "保存/加载配置文件的路径",
     "a. Download or Upload Video": "a. 下载或上传视频",
     "Delete and Reselect": "删除并重新选择",
     "Enter YouTube link:": "输入YouTube链接:",

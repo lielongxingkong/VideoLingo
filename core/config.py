@@ -1,11 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
-from core.utils.config_utils import load_key, update_key, CONFIG_PATH
-from ruamel.yaml import YAML
+from core.utils.config_utils import load_key, update_key
 import threading
-
-yaml = YAML()
-yaml.preserve_quotes = True
 
 # -----------------------
 # Nested Configuration Classes
@@ -20,11 +16,10 @@ class ApiConfig:
     format: str = "openai"
 
 @dataclass
-class WhisperConfig:
-    model: str = "large-v3"
+class AsrConfig:
     language: str = "en"
     detected_language: str = "en"
-    runtime: str = "elevenlabs"
+    runtime: str = "openai"
     elevenlabs_api_key: str = ""
     openai_api_key: str = ""
     openai_base_url: str = ""
@@ -66,8 +61,7 @@ class Config:
     api: ApiConfig = field(default_factory=ApiConfig)
     max_workers: int = 4
     target_language: str = "简体中文"
-    demucs: bool = False
-    whisper: WhisperConfig = field(default_factory=WhisperConfig)
+    asr: AsrConfig = field(default_factory=AsrConfig)
     burn_subtitles: bool = True
 
     # Advanced Settings
@@ -117,9 +111,7 @@ class Config:
             raise ValueError("API format must be 'openai' or 'anthropic'")
 
         # Validate Whisper settings
-        if self.whisper.model not in ["large-v3", "large-v3-turbo"]:
-            raise ValueError("Whisper model must be 'large-v3' or 'large-v3-turbo'")
-        if self.whisper.runtime not in ["elevenlabs", "openai"]:
+        if self.asr.runtime not in ["elevenlabs", "openai"]:
             raise ValueError("Whisper runtime must be 'elevenlabs' or 'openai'")
 
         # Validate TTS settings
@@ -140,7 +132,7 @@ class Config:
             raise ValueError("Speed factor must satisfy min ≤ accept ≤ max")
 
     def save(self) -> None:
-        """Save configuration to config.yaml"""
+        """Save configuration (no longer used, config is stored in session_state)"""
         with threading.Lock():
             # Load existing YAML structure to preserve comments
             with open(CONFIG_PATH, 'r', encoding='utf-8') as file:
@@ -201,7 +193,7 @@ _config_instance: Optional[Config] = None
 _config_lock = threading.Lock()
 
 def get_config() -> Config:
-    """Get singleton configuration instance (loaded from config.yaml)"""
+    """Get singleton configuration instance (loaded from DEFAULT_CONFIG or session_state)"""
     global _config_instance
     if _config_instance is None:
         with _config_lock:
@@ -211,7 +203,7 @@ def get_config() -> Config:
 
 @classmethod
 def load(cls) -> "Config":
-    """Load configuration from config.yaml"""
+    """Load configuration from DEFAULT_CONFIG"""
     config = cls()
 
     # Load API settings
@@ -222,13 +214,12 @@ def load(cls) -> "Config":
     config.api.format = load_key("api.format")
 
     # Load Whisper settings
-    config.whisper.model = load_key("whisper.model")
-    config.whisper.language = load_key("whisper.language")
-    config.whisper.detected_language = load_key("whisper.detected_language")
-    config.whisper.runtime = load_key("whisper.runtime")
-    config.whisper.elevenlabs_api_key = load_key("whisper.elevenlabs_api_key")
-    config.whisper.openai_api_key = load_key("whisper.openai_api_key")
-    config.whisper.openai_base_url = load_key("whisper.openai_base_url")
+    config.asr.language = load_key("asr.language")
+    config.asr.detected_language = load_key("asr.detected_language")
+    config.asr.runtime = load_key("asr.runtime")
+    config.asr.elevenlabs_api_key = load_key("asr.elevenlabs_api_key")
+    config.asr.openai_api_key = load_key("asr.openai_api_key")
+    config.asr.openai_base_url = load_key("asr.openai_base_url")
 
     # Load OpenAI TTS settings
     config.openai_tts.api_key = load_key("openai_tts.api_key")
@@ -255,7 +246,6 @@ def load(cls) -> "Config":
     config.display_language = load_key("display_language")
     config.max_workers = load_key("max_workers")
     config.target_language = load_key("target_language")
-    config.demucs = load_key("demucs")
     config.burn_subtitles = load_key("burn_subtitles")
     config.ffmpeg_gpu = load_key("ffmpeg_gpu")
     config.ytb_resolution = load_key("ytb_resolution")
@@ -298,7 +288,7 @@ if __name__ == "__main__":
         config = get_config()
         print("Configuration loaded successfully!")
         print(f"API Key: {config.api.key}")
-        print(f"Whisper Model: {config.whisper.model}")
+        print(f"ASR Language: {config.asr.language}")
         print(f"TTS Method: {config.tts_method}")
         print(f"Subtitle Max Length: {config.subtitle.max_length}")
         print(f"Language Split with Space: {config.language_split_with_space}")

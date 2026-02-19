@@ -1,4 +1,11 @@
 {
+    "Configuration Management": "設定管理",
+    "Export Configuration": "設定をエクスポート",
+    "Import Configuration": "設定をインポート",
+    "Apply Configuration": "設定を適用",
+    "Download Config": "設定をダウンロード",
+    "Error importing configuration": "設定のインポートエラー",
+    "Configuration applied successfully!": "設定が正常に適用されました!",
     "a. Download or Upload Video": "a. 動画のダウンロードまたはアップロード",
     "Delete and Reselect": "削除して再選択",
     "Enter YouTube link:": "YouTubeリンクを入力:",
@@ -106,5 +113,9 @@
     "No NVIDIA GPU detected": "NVIDIA GPUが検出されません",
     "No NVIDIA GPU detected or NVIDIA drivers not properly installed": "NVIDIA GPUが検出されないか、NVIDIAドライバーが正しくインストールされていません",
     "LLM JSON Format Support": "LLM JSON形式サポート",
-    "Enable if your LLM supports JSON mode output": "LLMがJSON出力モードをサポートしている場合に有効化"
+    "Enable if your LLM supports JSON mode output": "LLMがJSON出力モードをサポートしている場合に有効化",
+    "Save Configuration": "Save",
+    "Load Configuration": "Load",
+    "Config File Path": "Config File Path",
+    "Path to save/load configuration file": "Path to save/load configuration file"
 }

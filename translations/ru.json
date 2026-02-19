@@ -1,4 +1,11 @@
 {
+    "Configuration Management": "Управление конфигурацией",
+    "Export Configuration": "Экспорт конфигурации",
+    "Import Configuration": "Импорт конфигурации",
+    "Apply Configuration": "Применить конфигурацию",
+    "Download Config": "Скачать конфигурацию",
+    "Error importing configuration": "Ошибка импорта конфигурации",
+    "Configuration applied successfully!": "Конфигурация успешно применена!",
     "a. Download or Upload Video": "a. Скачать или загрузить видео",
     "Delete and Reselect": "Удалить и выбрать заново",
     "Enter YouTube link:": "Введите ссылку YouTube:",
@@ -106,5 +113,9 @@
     "No NVIDIA GPU detected": "GPU NVIDIA не обнаружен",
     "No NVIDIA GPU detected or NVIDIA drivers not properly installed": "GPU NVIDIA не обнаружен или драйверы NVIDIA установлены неправильно",
     "LLM JSON Format Support": "Поддержка формата JSON для LLM",
-    "Enable if your LLM supports JSON mode output": "Включите, если ваш LLM поддерживает вывод в формате JSON"
+    "Enable if your LLM supports JSON mode output": "Включите, если ваш LLM поддерживает вывод в формате JSON",
+    "Save Configuration": "Save",
+    "Load Configuration": "Load",
+    "Config File Path": "Config File Path",
+    "Path to save/load configuration file": "Path to save/load configuration file"
 }

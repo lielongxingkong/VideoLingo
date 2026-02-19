@@ -172,3 +172,6 @@ config.backup.yaml
 runtime/
 dev/
 installer_files/
+
+# user config (contains API keys)
+videolingo_config.json

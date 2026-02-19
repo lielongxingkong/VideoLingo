@@ -21,7 +21,7 @@ VideoLingo is an all-in-one video translation, localization, and dubbing tool th
 
 ## Tech Stack
 
-- **Python 3.10** - Main programming language
+- **Python 3.12** - Main programming language
 - **Streamlit** - Interactive web UI
 - **WhisperX** - Word-level ASR with diarization
 - **LLMs** - OpenAI, Claude, GPT-4.1, DeepSeek, Gemini, etc.
@@ -38,7 +38,7 @@ VideoLingo is an all-in-one video translation, localization, and dubbing tool th
 
 ```bash
 # Create conda environment
-conda create -n videolingo python=3.10.0 -y
+conda create -n videolingo python=3.12 -y
 conda activate videolingo
 
 # Install dependencies

@@ -85,10 +85,17 @@ Meet any problem? Chat with our free online AI agent [**here**](https://share.fa
 > 3. Add `C:\Program Files\NVIDIA\CUDNN\v9.3\bin\12.6` to your system PATH
 > 4. Restart your computer
 
-> **Note:** FFmpeg is required. Please install it via package managers:
-> - Windows: ```choco install ffmpeg``` (via [Chocolatey](https://chocolatey.org/))
-> - macOS: ```brew install ffmpeg``` (via [Homebrew](https://brew.sh/))
-> - Linux: ```sudo apt install ffmpeg``` (Debian/Ubuntu)
+## System Requirements
+
+- **Python 3.12**
+- **FFmpeg** (required)
+
+Install FFmpeg via package managers:
+- Windows: `choco install ffmpeg` (via [Chocolatey](https://chocolatey.org/))
+- macOS: `brew install ffmpeg` (via [Homebrew](https://brew.sh/))
+- Linux: `sudo apt install ffmpeg` (Debian/Ubuntu)
+
+## Installation
 
 1. Clone the repository
 
@@ -97,15 +104,20 @@ git clone https://github.com/Huanshere/VideoLingo.git
 cd VideoLingo
 ```
 
-2. Install dependencies(requires `python=3.10`)
+2. Create and activate conda environment
 
 ```bash
-conda create -n videolingo python=3.10.0 -y
+conda create -n videolingo python=3.12 -y
 conda activate videolingo
-python install.py
 ```
 
-3. Start the application
+3. Install dependencies
+
+```bash
+pip install -e .
+```
+
+4. Start the application
 
 ```bash
 streamlit run st.py

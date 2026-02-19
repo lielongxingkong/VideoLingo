@@ -4,42 +4,16 @@ import subprocess
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 ascii_logo = """
-__     ___     _            _     _                    
-\ \   / (_) __| | ___  ___ | |   (_)_ __   __ _  ___  
- \ \ / /| |/ _` |/ _ \/ _ \| |   | | '_ \ / _` |/ _ \ 
+__     ___     _            _     _
+\ \   / (_) __| | ___  ___ | |   (_)_ __   __ _  ___
+ \ \ / /| |/ _` |/ _ \/ _ \| |   | | '_ \ / _` |/ _ \
   \ V / | | (_| |  __/ (_) | |___| | | | | (_| | (_) |
-   \_/  |_|\__,_|\___|\___/|_____|_|_| |_|\__, |\___/ 
-                                          |___/        
+   \_/  |_|\__,_|\___|\___/|_____|_|_| |_|\__, |\___/
+                                          |___/
 """
 
 def install_package(*packages):
     subprocess.check_call([sys.executable, "-m", "pip", "install", *packages])
-
-def check_nvidia_gpu():
-    install_package("pynvml")
-    import pynvml
-    from translations.translations import translate as t
-    initialized = False
-    try:
-        pynvml.nvmlInit()
-        initialized = True
-        device_count = pynvml.nvmlDeviceGetCount()
-        if device_count > 0:
-            print(t("Detected NVIDIA GPU(s)"))
-            for i in range(device_count):
-                handle = pynvml.nvmlDeviceGetHandleByIndex(i)
-                name = pynvml.nvmlDeviceGetName(handle)
-                print(f"GPU {i}: {name}")
-            return True
-        else:
-            print(t("No NVIDIA GPU detected"))
-            return False
-    except pynvml.NVMLError:
-        print(t("No NVIDIA GPU detected or NVIDIA drivers not properly installed"))
-        return False
-    finally:
-        if initialized:
-            pynvml.nvmlShutdown()
 
 def check_ffmpeg():
     from rich.console import Console
@@ -55,7 +29,7 @@ def check_ffmpeg():
     except (subprocess.CalledProcessError, FileNotFoundError):
         system = platform.system()
         install_cmd = ""
-        
+
         if system == "Windows":
             install_cmd = "choco install ffmpeg"
             extra_note = t("Install Chocolatey first (https://chocolatey.org/)")
@@ -65,7 +39,7 @@ def check_ffmpeg():
         elif system == "Linux":
             install_cmd = "sudo apt install ffmpeg  # Ubuntu/Debian\nsudo yum install ffmpeg  # CentOS/RHEL"
             extra_note = t("Use your distribution's package manager")
-        
+
         console.print(Panel.fit(
             t("❌ FFmpeg not found\n\n") +
             f"{t('🛠️ Install using:')}\n[bold cyan]{install_cmd}[/bold cyan]\n\n" +
@@ -87,7 +61,7 @@ def main():
     from core.utils.decorator import except_handler
 
     console = Console()
-    
+
     width = max(len(line) for line in ascii_logo.splitlines()) + 4
     welcome_panel = Panel(
         ascii_logo,
@@ -119,15 +93,7 @@ def main():
         from core.utils.pypi_autochoose import main as choose_mirror
         choose_mirror()
 
-    # Detect system and GPU
-    has_gpu = platform.system() != 'Darwin' and check_nvidia_gpu()
-    if has_gpu:
-        console.print(Panel(t("🎮 NVIDIA GPU detected, installing CUDA version of PyTorch..."), style="cyan"))
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "torch==2.0.0", "torchaudio==2.0.0", "--index-url", "https://download.pytorch.org/whl/cu118"])
-    else:
-        system_name = "🍎 MacOS" if platform.system() == 'Darwin' else "💻 No NVIDIA GPU"
-        console.print(Panel(t(f"{system_name} detected, installing CPU version of PyTorch... Note: it might be slow during whisperX transcription."), style="cyan"))
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "torch==2.1.2", "torchaudio==2.1.2"])
+    # No PyTorch installation needed - cloud only
 
     @except_handler("Failed to install project")
     def install_requirements():
@@ -154,10 +120,10 @@ def main():
 
     if platform.system() == 'Linux':
         install_noto_font()
-    
+
     install_requirements()
     check_ffmpeg()
-    
+
     # First panel with installation complete and startup command
     panel1_text = (
         t("Installation completed") + "\n\n" +

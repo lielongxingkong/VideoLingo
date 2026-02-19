@@ -59,7 +59,7 @@ def page_setting():
                 update_key("whisper.language", langs[lang])
                 st.rerun()
 
-        runtime = st.selectbox(t("WhisperX Runtime"), options=["local", "cloud", "elevenlabs"], index=["local", "cloud", "elevenlabs"].index(load_key("whisper.runtime")), help=t("Local runtime requires >8GB GPU, cloud runtime requires 302ai API key, elevenlabs runtime requires ElevenLabs API key"))
+        runtime = st.selectbox(t("WhisperX Runtime"), options=["cloud", "elevenlabs"], index=["cloud", "elevenlabs"].index(load_key("whisper.runtime")) if load_key("whisper.runtime") in ["cloud", "elevenlabs"] else 0, help=t("Cloud runtime requires 302ai API key, elevenlabs runtime requires ElevenLabs API key"))
         if runtime != load_key("whisper.runtime"):
             update_key("whisper.runtime", runtime)
             st.rerun()
@@ -74,18 +74,16 @@ def page_setting():
                 update_key("target_language", target_language)
                 st.rerun()
 
-        demucs = st.toggle(t("Vocal separation enhance"), value=load_key("demucs"), help=t("Recommended for videos with loud background noise, but will increase processing time"))
-        if demucs != load_key("demucs"):
-            update_key("demucs", demucs)
-            st.rerun()
-        
         burn_subtitles = st.toggle(t("Burn-in Subtitles"), value=load_key("burn_subtitles"), help=t("Whether to burn subtitles into the video, will increase processing time"))
         if burn_subtitles != load_key("burn_subtitles"):
             update_key("burn_subtitles", burn_subtitles)
             st.rerun()
     with st.expander(t("Dubbing Settings"), expanded=True):
-        tts_methods = ["azure_tts", "openai_tts", "fish_tts", "sf_fish_tts", "edge_tts", "gpt_sovits", "custom_tts", "sf_cosyvoice2", "f5tts"]
-        select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(load_key("tts_method")))
+        tts_methods = ["azure_tts", "openai_tts", "fish_tts", "sf_fish_tts", "edge_tts", "custom_tts", "sf_cosyvoice2", "f5tts"]
+        current_tts = load_key("tts_method")
+        if current_tts == "gpt_sovits":
+            current_tts = "azure_tts"
+        select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(current_tts) if current_tts in tts_methods else 0)
         if select_tts != load_key("tts_method"):
             update_key("tts_method", select_tts)
             st.rerun()
@@ -126,23 +124,7 @@ def page_setting():
         elif select_tts == "azure_tts":
             config_input("302ai API", "azure_tts.api_key")
             config_input(t("Azure Voice"), "azure_tts.voice")
-        
-        elif select_tts == "gpt_sovits":
-            st.info(t("Please refer to Github homepage for GPT_SoVITS configuration"))
-            config_input(t("SoVITS Character"), "gpt_sovits.character")
-            
-            refer_mode_options = {1: t("Mode 1: Use provided reference audio only"), 2: t("Mode 2: Use first audio from video as reference"), 3: t("Mode 3: Use each audio from video as reference")}
-            selected_refer_mode = st.selectbox(
-                t("Refer Mode"),
-                options=list(refer_mode_options.keys()),
-                format_func=lambda x: refer_mode_options[x],
-                index=list(refer_mode_options.keys()).index(load_key("gpt_sovits.refer_mode")),
-                help=t("Configure reference audio mode for GPT-SoVITS")
-            )
-            if selected_refer_mode != load_key("gpt_sovits.refer_mode"):
-                update_key("gpt_sovits.refer_mode", selected_refer_mode)
-                st.rerun()
-                
+
         elif select_tts == "edge_tts":
             config_input(t("Edge TTS Voice"), "edge_tts.voice")
 

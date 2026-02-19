@@ -21,8 +21,8 @@ max_workers: 4
 # Language settings, written into the prompt, can be described in natural language
 target_language: '简体中文'
 
-# Whether to use Demucs for vocal separation before transcription
-demucs: true
+# Whether to use Demucs for vocal separation before transcription (disabled - cloud only)
+demucs: false
 
 whisper:
   # ["large-v3", "large-v3-turbo"]. Note: for zh model will force to use Belle/large-v3
@@ -30,8 +30,8 @@ whisper:
   # Whisper specified recognition language ISO 639-1
   language: 'en'
   detected_language: 'en'
-  # Whisper running mode ["local", "cloud", "elevenlabs"]. Specifies where to run, cloud uses 302.ai API
-  runtime: 'local'
+  # Whisper running mode ["cloud", "elevenlabs"]. Specifies where to run, cloud uses 302.ai API
+  runtime: 'cloud'
   # 302.ai API key
   whisperX_302_api_key: 'your_302_api_key'
   # ElevenLabs API key (experimental)
@@ -111,10 +111,10 @@ sf_cosyvoice2:
 edge_tts:
   voice: 'zh-CN-XiaoxiaoNeural'
 
-# SoVITS configuration
-gpt_sovits:
-  character: 'Huanyuv2'
-  refer_mode: 3
+# SoVITS configuration (disabled - local model removed)
+# gpt_sovits:
+#   character: 'Huanyuv2'
+#   refer_mode: 3
 
 f5tts:
   302_api: 'YOUR_302_API_KEY'

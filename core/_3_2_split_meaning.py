@@ -2,16 +2,16 @@ import concurrent.futures
 from difflib import SequenceMatcher
 import math
 from core.prompts import get_split_prompt
-from core.spacy_utils.load_nlp_model import init_nlp
+from core.light_split import simple_tokenize
 from core.utils import *
 from rich.console import Console
 from rich.table import Table
 from core.utils.models import _3_1_SPLIT_BY_NLP, _3_2_SPLIT_BY_MEANING
 console = Console()
 
-def tokenize_sentence(sentence, nlp):
-    doc = nlp(sentence)
-    return [token.text for token in doc]
+def tokenize_sentence(sentence, _=None):
+    """Lightweight tokenizer (no spaCy)."""
+    return simple_tokenize(sentence)
 
 def find_split_positions(original, modified):
     split_positions = []
@@ -80,7 +80,7 @@ def split_sentence(sentence, num_parts, word_limit=20, index=-1, retry_attempt=0
     
     return best_split
 
-def parallel_split_sentences(sentences, max_length, max_workers, nlp, retry_attempt=0):
+def parallel_split_sentences(sentences, max_length, max_workers, _=None, retry_attempt=0):
     """Split sentences in parallel using a thread pool."""
     new_sentences = [None] * len(sentences)
     futures = []
@@ -88,7 +88,7 @@ def parallel_split_sentences(sentences, max_length, max_workers, nlp, retry_atte
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         for index, sentence in enumerate(sentences):
             # Use tokenizer to split the sentence
-            tokens = tokenize_sentence(sentence, nlp)
+            tokens = tokenize_sentence(sentence)
             # print("Tokenization result:", tokens)
             num_parts = math.ceil(len(tokens) / max_length)
             if len(tokens) > max_length:
@@ -114,10 +114,9 @@ def split_sentences_by_meaning():
     with open(_3_1_SPLIT_BY_NLP, 'r', encoding='utf-8') as f:
         sentences = [line.strip() for line in f.readlines()]
 
-    nlp = init_nlp()
     # 🔄 process sentences multiple times to ensure all are split
     for retry_attempt in range(3):
-        sentences = parallel_split_sentences(sentences, max_length=load_key("max_split_length"), max_workers=load_key("max_workers"), nlp=nlp, retry_attempt=retry_attempt)
+        sentences = parallel_split_sentences(sentences, max_length=load_key("max_split_length"), max_workers=load_key("max_workers"), retry_attempt=retry_attempt)
 
     # 💾 save results
     with open(_3_2_SPLIT_BY_MEANING, 'w', encoding='utf-8') as f:

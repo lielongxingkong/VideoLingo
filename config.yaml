@@ -155,17 +155,6 @@ allowed_audio_formats:
 - 'flac'
 - 'm4a'
 
-# Spacy models
-spacy_model_map:
-  en: 'en_core_web_md'
-  ru: 'ru_core_news_md'
-  fr: 'fr_core_news_md'
-  ja: 'ja_core_news_md'
-  es: 'es_core_news_md'
-  de: 'de_core_news_md'
-  it: 'it_core_news_md'
-  zh: 'zh_core_web_md'
-
 # Languages that use space as separator
 language_split_with_space:
 - 'en'

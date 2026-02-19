@@ -2,6 +2,7 @@ from openai import OpenAI
 from pathlib import Path
 from core.utils.config_utils import load_key
 from core.utils.decorator import except_handler
+from core.constants import DEFAULT_OPENAI_TTS_VOICE, DEFAULT_OPENAI_TTS_MODEL, DEFAULT_OPENAI_TTS_BASE_URL
 from rich import print as rprint
 
 
@@ -13,15 +14,15 @@ def openai_tts_for_videolingo(text, save_as):
     # Get API configuration from config, fall back to main API config if not set
     api_key = load_key("openai_tts.api_key") or load_key("api.key")
     base_url = load_key("openai_tts.base_url") or load_key("api.base_url")
-    voice = load_key("openai_tts.voice") or "alloy"
-    model = load_key("openai_tts.model") or "tts-1"
+    voice = load_key("openai_tts.voice") or DEFAULT_OPENAI_TTS_VOICE
+    model = load_key("openai_tts.model") or DEFAULT_OPENAI_TTS_MODEL
 
     if not api_key:
         raise ValueError("OpenAI API key is not set. Please set either openai_tts.api_key or api.key in the Streamlit settings page")
 
     # Handle base URL
     if not base_url or base_url == "":
-        base_url = "https://api.openai.com/v1"
+        base_url = DEFAULT_OPENAI_TTS_BASE_URL
     elif 'v1' not in base_url:
         base_url = base_url.strip('/') + '/v1'
 

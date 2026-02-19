@@ -58,9 +58,8 @@ def align_subs(src_sub: str, tr_sub: str, src_part: str) -> tuple[list[str], lis
     return src_parts, tr_parts, tr_remerged
 
 def split_align_subs(src_lines: list[str], tr_lines: list[str]):
-    subtitle_set = load_key("subtitle")
-    MAX_SUB_LENGTH = subtitle_set["max_length"]
-    TARGET_SUB_MULTIPLIER = subtitle_set["target_multiplier"]
+    MAX_SUB_LENGTH = load_key("subtitle.max_length")
+    TARGET_SUB_MULTIPLIER = load_key("subtitle.target_multiplier")
     remerged_tr_lines = tr_lines.copy()
     
     to_split = []
@@ -99,10 +98,9 @@ def split_for_sub_main():
     src = df['Source'].tolist()
     trans = df['Translation'].tolist()
     
-    subtitle_set = load_key("subtitle")
-    MAX_SUB_LENGTH = subtitle_set["max_length"]
-    TARGET_SUB_MULTIPLIER = subtitle_set["target_multiplier"]
-    
+    MAX_SUB_LENGTH = load_key("subtitle.max_length")
+    TARGET_SUB_MULTIPLIER = load_key("subtitle.target_multiplier")
+
     for attempt in range(3):  # 多次切割
         console.print(Panel(f"🔄 Split attempt {attempt + 1}", expand=False))
         split_src, split_trans, remerged = split_align_subs(src.copy(), trans)

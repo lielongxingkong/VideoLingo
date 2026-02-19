@@ -7,6 +7,7 @@ import soundfile as sf
 from openai import OpenAI
 from rich import print as rprint
 from core.utils.config_utils import load_key, update_key
+from core.constants import DEFAULT_ASR_OPENAI_BASE_URL
 
 
 # ----------------------------
@@ -28,7 +29,8 @@ def openai2whisper(openai_words, start_offset=0, word_level_timestamp=True):
         # Adjust timestamps with offset
         word_start = word_info.get("start", 0) + start_offset
         word_end = word_info.get("end", 0) + start_offset
-        word_text = word_info.get("word", "")
+        # OpenAI API returns "text", but we need "word" for compatibility
+        word_text = word_info.get("word") or word_info.get("text", "")
 
         if current_segment is None:
             # Start new segment
@@ -130,7 +132,7 @@ def transcribe_audio_openai(raw_audio_path, vocal_audio_path, start=None, end=No
 
         # Handle base URL
         if not base_url or base_url == "":
-            base_url = "https://api.openai.com/v1"
+            base_url = DEFAULT_ASR_OPENAI_BASE_URL
         elif 'v1' not in base_url:
             base_url = base_url.strip('/') + '/v1'
 

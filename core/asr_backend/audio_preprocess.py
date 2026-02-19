@@ -90,19 +90,22 @@ def process_transcription(result: dict) -> pd.DataFrame:
         speaker_id = segment.get('speaker_id', None)
         
         for word in segment['words']:
+            # Handle both "word" and "text" keys for compatibility
+            word_text = word.get("word") or word.get("text", "")
+
             # Check word length
-            if len(word["word"]) > 30:
-                rprint(f"[yellow]⚠️ Warning: Detected word longer than 30 characters, skipping: {word['word']}[/yellow]")
+            if len(word_text) > 30:
+                rprint(f"[yellow]⚠️ Warning: Detected word longer than 30 characters, skipping: {word_text}[/yellow]")
                 continue
-                
+
             # ! For French, we need to convert guillemets to empty strings
-            word["word"] = word["word"].replace('»', '').replace('«', '')
+            word_text = word_text.replace('»', '').replace('«', '')
             
             if 'start' not in word and 'end' not in word:
                 if all_words:
                     # Assign the end time of the previous word as the start and end time of the current word
                     word_dict = {
-                        'text': word["word"],
+                        'text': word_text,
                         'start': all_words[-1]['end'],
                         'end': all_words[-1]['end'],
                         'speaker_id': speaker_id
@@ -113,7 +116,7 @@ def process_transcription(result: dict) -> pd.DataFrame:
                     next_word = next((w for w in segment['words'] if 'start' in w and 'end' in w), None)
                     if next_word:
                         word_dict = {
-                            'text': word["word"],
+                            'text': word_text,
                             'start': next_word["start"],
                             'end': next_word["end"],
                             'speaker_id': speaker_id
@@ -124,12 +127,12 @@ def process_transcription(result: dict) -> pd.DataFrame:
             else:
                 # Normal case, with start and end times
                 word_dict = {
-                    'text': f'{word["word"]}',
+                    'text': word_text,
                     'start': word.get('start', all_words[-1]['end'] if all_words else 0),
                     'end': word['end'],
                     'speaker_id': speaker_id
                 }
-                
+
                 all_words.append(word_dict)
     
     return pd.DataFrame(all_words)

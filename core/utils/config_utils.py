@@ -1,8 +1,57 @@
 import streamlit as st
 import json
+import os
 import threading
 
 lock = threading.Lock()
+
+# -----------------------
+# Import constants
+# -----------------------
+from core.constants import (
+    DEFAULT_DISPLAY_LANGUAGE,
+    DEFAULT_API_KEY,
+    DEFAULT_API_BASE_URL,
+    DEFAULT_API_MODEL,
+    DEFAULT_API_FORMAT,
+    DEFAULT_API_LLM_SUPPORT_JSON,
+    DEFAULT_MAX_WORKERS,
+    DEFAULT_SUMMARY_LENGTH,
+    DEFAULT_REFLECT_TRANSLATE,
+    DEFAULT_PAUSE_BEFORE_TRANSLATE,
+    DEFAULT_ASR_LANGUAGE,
+    DEFAULT_ASR_DETECTED_LANGUAGE,
+    DEFAULT_ASR_RUNTIME,
+    DEFAULT_ASR_ELEVENLABS_API_KEY,
+    DEFAULT_ASR_OPENAI_API_KEY,
+    DEFAULT_ASR_OPENAI_BASE_URL,
+    DEFAULT_TARGET_LANGUAGE,
+    DEFAULT_BURN_SUBTITLES,
+    DEFAULT_SUBTITLE_MAX_LENGTH,
+    DEFAULT_SUBTITLE_TARGET_MULTIPLIER,
+    DEFAULT_MAX_SPLIT_LENGTH,
+    DEFAULT_FFMPEG_GPU,
+    DEFAULT_YOUTUBE_COOKIES_PATH,
+    DEFAULT_YTB_RESOLUTION,
+    DEFAULT_TTS_METHOD,
+    DEFAULT_OPENAI_TTS_API_KEY,
+    DEFAULT_OPENAI_TTS_BASE_URL,
+    DEFAULT_OPENAI_TTS_VOICE,
+    DEFAULT_OPENAI_TTS_MODEL,
+    DEFAULT_EDGE_TTS_VOICE,
+    DEFAULT_SPEED_FACTOR_MIN,
+    DEFAULT_SPEED_FACTOR_ACCEPT,
+    DEFAULT_SPEED_FACTOR_MAX,
+    DEFAULT_MIN_SUBTITLE_DURATION,
+    DEFAULT_MIN_TRIM_DURATION,
+    DEFAULT_TOLERANCE,
+    DEFAULT_MODEL_DIR,
+    DEFAULT_CONFIG_FILE_PATH,
+    ALLOWED_VIDEO_FORMATS,
+    ALLOWED_AUDIO_FORMATS,
+    LANGUAGE_SPLIT_WITH_SPACE,
+    LANGUAGE_SPLIT_WITHOUT_SPACE,
+)
 
 # -----------------------
 # Default Configuration
@@ -10,64 +59,64 @@ lock = threading.Lock()
 
 DEFAULT_CONFIG = {
     # Display
-    "display_language": "zh-CN",
+    "display_language": DEFAULT_DISPLAY_LANGUAGE,
 
     # API
-    "api.key": "",
-    "api.base_url": "https://www.dmxapi.cn",
-    "api.model": "gpt-4.1-2025-04-14",
-    "api.format": "openai",
-    "api.llm_support_json": False,
+    "api.key": DEFAULT_API_KEY,
+    "api.base_url": DEFAULT_API_BASE_URL,
+    "api.model": DEFAULT_API_MODEL,
+    "api.format": DEFAULT_API_FORMAT,
+    "api.llm_support_json": DEFAULT_API_LLM_SUPPORT_JSON,
 
     # LLM Processing
-    "max_workers": 4,
-    "summary_length": 8000,
-    "reflect_translate": True,
-    "pause_before_translate": False,
+    "max_workers": DEFAULT_MAX_WORKERS,
+    "summary_length": DEFAULT_SUMMARY_LENGTH,
+    "reflect_translate": DEFAULT_REFLECT_TRANSLATE,
+    "pause_before_translate": DEFAULT_PAUSE_BEFORE_TRANSLATE,
 
     # ASR (cloud services only)
-    "asr.language": "en",
-    "asr.detected_language": "en",
-    "asr.runtime": "openai",
-    "asr.elevenlabs_api_key": "",
-    "asr.openai_api_key": "",
-    "asr.openai_base_url": "https://www.dmxapi.cn",
+    "asr.language": DEFAULT_ASR_LANGUAGE,
+    "asr.detected_language": DEFAULT_ASR_DETECTED_LANGUAGE,
+    "asr.runtime": DEFAULT_ASR_RUNTIME,
+    "asr.elevenlabs_api_key": DEFAULT_ASR_ELEVENLABS_API_KEY,
+    "asr.openai_api_key": DEFAULT_ASR_OPENAI_API_KEY,
+    "asr.openai_base_url": DEFAULT_ASR_OPENAI_BASE_URL,
 
     # Subtitle
-    "target_language": "简体中文",
-    "burn_subtitles": True,
-    "subtitle.max_length": 75,
-    "subtitle.target_multiplier": 1.2,
-    "max_split_length": 20,
+    "target_language": DEFAULT_TARGET_LANGUAGE,
+    "burn_subtitles": DEFAULT_BURN_SUBTITLES,
+    "subtitle.max_length": DEFAULT_SUBTITLE_MAX_LENGTH,
+    "subtitle.target_multiplier": DEFAULT_SUBTITLE_TARGET_MULTIPLIER,
+    "max_split_length": DEFAULT_MAX_SPLIT_LENGTH,
 
     # Video
-    "ffmpeg_gpu": False,
-    "youtube.cookies_path": "",
-    "ytb_resolution": "1080",
+    "ffmpeg_gpu": DEFAULT_FFMPEG_GPU,
+    "youtube.cookies_path": DEFAULT_YOUTUBE_COOKIES_PATH,
+    "ytb_resolution": DEFAULT_YTB_RESOLUTION,
 
     # TTS
-    "tts_method": "openai_tts",
-    "openai_tts.api_key": "",
-    "openai_tts.base_url": "https://www.dmxapi.cn",
-    "openai_tts.voice": "alloy",
-    "openai_tts.model": "tts-1",
-    "edge_tts.voice": "zh-CN-XiaoxiaoNeural",
+    "tts_method": DEFAULT_TTS_METHOD,
+    "openai_tts.api_key": DEFAULT_OPENAI_TTS_API_KEY,
+    "openai_tts.base_url": DEFAULT_OPENAI_TTS_BASE_URL,
+    "openai_tts.voice": DEFAULT_OPENAI_TTS_VOICE,
+    "openai_tts.model": DEFAULT_OPENAI_TTS_MODEL,
+    "edge_tts.voice": DEFAULT_EDGE_TTS_VOICE,
 
     # Audio
-    "speed_factor.min": 1.0,
-    "speed_factor.accept": 1.2,
-    "speed_factor.max": 1.4,
-    "min_subtitle_duration": 2.5,
-    "min_trim_duration": 3.5,
-    "tolerance": 1.5,
+    "speed_factor.min": DEFAULT_SPEED_FACTOR_MIN,
+    "speed_factor.accept": DEFAULT_SPEED_FACTOR_ACCEPT,
+    "speed_factor.max": DEFAULT_SPEED_FACTOR_MAX,
+    "min_subtitle_duration": DEFAULT_MIN_SUBTITLE_DURATION,
+    "min_trim_duration": DEFAULT_MIN_TRIM_DURATION,
+    "tolerance": DEFAULT_TOLERANCE,
 
     # Additional
-    "model_dir": "./_model_cache",
-    "config_file_path": "./videolingo_config.json",
-    "allowed_video_formats": ["mp4", "mov", "avi", "mkv", "flv", "wmv", "webm"],
-    "allowed_audio_formats": ["wav", "mp3", "flac", "m4a"],
-    "language_split_with_space": ["en", "es", "fr", "de", "it", "ru"],
-    "language_split_without_space": ["zh", "ja"],
+    "model_dir": DEFAULT_MODEL_DIR,
+    "config_file_path": DEFAULT_CONFIG_FILE_PATH,
+    "allowed_video_formats": ALLOWED_VIDEO_FORMATS,
+    "allowed_audio_formats": ALLOWED_AUDIO_FORMATS,
+    "language_split_with_space": LANGUAGE_SPLIT_WITH_SPACE,
+    "language_split_without_space": LANGUAGE_SPLIT_WITHOUT_SPACE,
 }
 
 # -----------------------
@@ -97,15 +146,36 @@ def _set_nested_value(data, keys, new_value):
         return True
     return False
 
+# Cache for config file to avoid repeated file I/O
+_config_file_cache = None
+
+def _load_config_from_file():
+    """Load config from file (cached)"""
+    global _config_file_cache
+    if _config_file_cache is None:
+        config_path = DEFAULT_CONFIG.get("config_file_path", "./videolingo_config.json")
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    _config_file_cache = json.load(f)
+            except Exception:
+                _config_file_cache = None
+    return _config_file_cache
+
 def load_key(key):
-    """Load config value from session_state or DEFAULT_CONFIG"""
+    """Load config value from session_state, config file, or DEFAULT_CONFIG"""
     # First try to get from session_state (Streamlit context)
     if hasattr(st, 'session_state') and st.session_state:
         config = st.session_state.get("config", {})
         if config is not None:
             # Use key directly (flat key structure, not nested)
-            if key in config:
+            if key in config and config[key]:
                 return config[key]
+
+    # Try to load from config file (for worker threads)
+    file_config = _load_config_from_file()
+    if file_config and key in file_config and file_config[key]:
+        return file_config[key]
 
     # Fallback to DEFAULT_CONFIG
     return DEFAULT_CONFIG.get(key)

@@ -1,6 +1,49 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 from core.utils.config_utils import load_key, update_key
+from core.constants import (
+    DEFAULT_DISPLAY_LANGUAGE,
+    DEFAULT_API_KEY,
+    DEFAULT_API_BASE_URL,
+    DEFAULT_API_MODEL,
+    DEFAULT_API_FORMAT,
+    DEFAULT_API_LLM_SUPPORT_JSON,
+    DEFAULT_MAX_WORKERS,
+    DEFAULT_SUMMARY_LENGTH,
+    DEFAULT_REFLECT_TRANSLATE,
+    DEFAULT_PAUSE_BEFORE_TRANSLATE,
+    DEFAULT_ASR_LANGUAGE,
+    DEFAULT_ASR_DETECTED_LANGUAGE,
+    DEFAULT_ASR_RUNTIME,
+    DEFAULT_ASR_ELEVENLABS_API_KEY,
+    DEFAULT_ASR_OPENAI_API_KEY,
+    DEFAULT_ASR_OPENAI_BASE_URL,
+    DEFAULT_TARGET_LANGUAGE,
+    DEFAULT_BURN_SUBTITLES,
+    DEFAULT_SUBTITLE_MAX_LENGTH,
+    DEFAULT_SUBTITLE_TARGET_MULTIPLIER,
+    DEFAULT_MAX_SPLIT_LENGTH,
+    DEFAULT_FFMPEG_GPU,
+    DEFAULT_YOUTUBE_COOKIES_PATH,
+    DEFAULT_YTB_RESOLUTION,
+    DEFAULT_TTS_METHOD,
+    DEFAULT_OPENAI_TTS_API_KEY,
+    DEFAULT_OPENAI_TTS_BASE_URL,
+    DEFAULT_OPENAI_TTS_VOICE,
+    DEFAULT_OPENAI_TTS_MODEL,
+    DEFAULT_EDGE_TTS_VOICE,
+    DEFAULT_SPEED_FACTOR_MIN,
+    DEFAULT_SPEED_FACTOR_ACCEPT,
+    DEFAULT_SPEED_FACTOR_MAX,
+    DEFAULT_MIN_SUBTITLE_DURATION,
+    DEFAULT_MIN_TRIM_DURATION,
+    DEFAULT_TOLERANCE,
+    DEFAULT_MODEL_DIR,
+    ALLOWED_VIDEO_FORMATS,
+    ALLOWED_AUDIO_FORMATS,
+    LANGUAGE_SPLIT_WITH_SPACE,
+    LANGUAGE_SPLIT_WITHOUT_SPACE,
+)
 import threading
 
 # -----------------------
@@ -9,46 +52,46 @@ import threading
 
 @dataclass
 class ApiConfig:
-    key: str = ""
-    base_url: str = "https://yunwu.ai"
-    model: str = "gpt-4.1-2025-04-14"
-    llm_support_json: bool = False
-    format: str = "openai"
+    key: str = DEFAULT_API_KEY
+    base_url: str = DEFAULT_API_BASE_URL
+    model: str = DEFAULT_API_MODEL
+    llm_support_json: bool = DEFAULT_API_LLM_SUPPORT_JSON
+    format: str = DEFAULT_API_FORMAT
 
 @dataclass
 class AsrConfig:
-    language: str = "en"
-    detected_language: str = "en"
-    runtime: str = "openai"
-    elevenlabs_api_key: str = ""
-    openai_api_key: str = ""
-    openai_base_url: str = ""
+    language: str = DEFAULT_ASR_LANGUAGE
+    detected_language: str = DEFAULT_ASR_DETECTED_LANGUAGE
+    runtime: str = DEFAULT_ASR_RUNTIME
+    elevenlabs_api_key: str = DEFAULT_ASR_ELEVENLABS_API_KEY
+    openai_api_key: str = DEFAULT_ASR_OPENAI_API_KEY
+    openai_base_url: str = DEFAULT_ASR_OPENAI_BASE_URL
 
 @dataclass
 class OpenAITTSConfig:
-    api_key: str = ""
-    base_url: str = ""
-    voice: str = "alloy"
-    model: str = "tts-1"
+    api_key: str = DEFAULT_OPENAI_TTS_API_KEY
+    base_url: str = DEFAULT_OPENAI_TTS_BASE_URL
+    voice: str = DEFAULT_OPENAI_TTS_VOICE
+    model: str = DEFAULT_OPENAI_TTS_MODEL
 
 @dataclass
 class EdgeTTSConfig:
-    voice: str = "zh-CN-XiaoxiaoNeural"
+    voice: str = DEFAULT_EDGE_TTS_VOICE
 
 @dataclass
 class SubtitleConfig:
-    max_length: int = 75
-    target_multiplier: float = 1.2
+    max_length: int = DEFAULT_SUBTITLE_MAX_LENGTH
+    target_multiplier: float = DEFAULT_SUBTITLE_TARGET_MULTIPLIER
 
 @dataclass
 class SpeedFactorConfig:
-    min: float = 1.0
-    accept: float = 1.2
-    max: float = 1.4
+    min: float = DEFAULT_SPEED_FACTOR_MIN
+    accept: float = DEFAULT_SPEED_FACTOR_ACCEPT
+    max: float = DEFAULT_SPEED_FACTOR_MAX
 
 @dataclass
 class YouTubeConfig:
-    cookies_path: str = ""
+    cookies_path: str = DEFAULT_YOUTUBE_COOKIES_PATH
 
 # -----------------------
 # Main Configuration Class
@@ -57,46 +100,38 @@ class YouTubeConfig:
 @dataclass
 class Config:
     # Basic Settings
-    display_language: str = "zh-CN"
+    display_language: str = DEFAULT_DISPLAY_LANGUAGE
     api: ApiConfig = field(default_factory=ApiConfig)
-    max_workers: int = 4
-    target_language: str = "简体中文"
+    max_workers: int = DEFAULT_MAX_WORKERS
+    target_language: str = DEFAULT_TARGET_LANGUAGE
     asr: AsrConfig = field(default_factory=AsrConfig)
-    burn_subtitles: bool = True
+    burn_subtitles: bool = DEFAULT_BURN_SUBTITLES
 
     # Advanced Settings
-    ffmpeg_gpu: bool = False
+    ffmpeg_gpu: bool = DEFAULT_FFMPEG_GPU
     youtube: YouTubeConfig = field(default_factory=YouTubeConfig)
-    ytb_resolution: str = "1080"
+    ytb_resolution: str = DEFAULT_YTB_RESOLUTION
     subtitle: SubtitleConfig = field(default_factory=SubtitleConfig)
-    summary_length: int = 8000
-    max_split_length: int = 20
-    reflect_translate: bool = True
-    pause_before_translate: bool = False
+    summary_length: int = DEFAULT_SUMMARY_LENGTH
+    max_split_length: int = DEFAULT_MAX_SPLIT_LENGTH
+    reflect_translate: bool = DEFAULT_REFLECT_TRANSLATE
+    pause_before_translate: bool = DEFAULT_PAUSE_BEFORE_TRANSLATE
 
     # Dubbing Settings
-    tts_method: str = "openai_tts"
+    tts_method: str = DEFAULT_TTS_METHOD
     openai_tts: OpenAITTSConfig = field(default_factory=OpenAITTSConfig)
     edge_tts: EdgeTTSConfig = field(default_factory=EdgeTTSConfig)
     speed_factor: SpeedFactorConfig = field(default_factory=SpeedFactorConfig)
-    min_subtitle_duration: float = 2.5
-    min_trim_duration: float = 3.5
-    tolerance: float = 1.5
+    min_subtitle_duration: float = DEFAULT_MIN_SUBTITLE_DURATION
+    min_trim_duration: float = DEFAULT_MIN_TRIM_DURATION
+    tolerance: float = DEFAULT_TOLERANCE
 
     # Additional Settings
-    model_dir: str = "./_model_cache"
-    allowed_video_formats: List[str] = field(default_factory=lambda: [
-        "mp4", "mov", "avi", "mkv", "flv", "wmv", "webm"
-    ])
-    allowed_audio_formats: List[str] = field(default_factory=lambda: [
-        "wav", "mp3", "flac", "m4a"
-    ])
-    language_split_with_space: List[str] = field(default_factory=lambda: [
-        "en", "es", "fr", "de", "it", "ru"
-    ])
-    language_split_without_space: List[str] = field(default_factory=lambda: [
-        "zh", "ja"
-    ])
+    model_dir: str = DEFAULT_MODEL_DIR
+    allowed_video_formats: List[str] = field(default_factory=lambda: ALLOWED_VIDEO_FORMATS.copy())
+    allowed_audio_formats: List[str] = field(default_factory=lambda: ALLOWED_AUDIO_FORMATS.copy())
+    language_split_with_space: List[str] = field(default_factory=lambda: LANGUAGE_SPLIT_WITH_SPACE.copy())
+    language_split_without_space: List[str] = field(default_factory=lambda: LANGUAGE_SPLIT_WITHOUT_SPACE.copy())
 
     def __post_init__(self):
         """Validate configuration after initialization"""

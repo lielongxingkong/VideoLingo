@@ -3,6 +3,16 @@ import json
 from translations.translations import translate as t
 from translations.translations import DISPLAY_LANGUAGES
 from core.utils.config_utils import DEFAULT_CONFIG, load_key, update_key, save_config_to_file, load_config_from_file
+from core.constants import (
+    TTS_METHOD_OPTIONS,
+    OPENAI_TTS_VOICE_OPTIONS,
+    OPENAI_TTS_MODEL_OPTIONS,
+    ASR_RUNTIME_OPTIONS,
+    API_FORMAT_OPTIONS,
+    ASR_LANGUAGE_OPTIONS,
+    DEFAULT_OPENAI_TTS_VOICE,
+    DEFAULT_OPENAI_TTS_MODEL,
+)
 from core.utils import *
 
 def config_input(label, key, help=None, key_suffix=None, placeholder=None):
@@ -69,7 +79,7 @@ def page_setting():
 
         api_format = st.selectbox(
             t("API Format"),
-            options=["openai", "anthropic"],
+            options=API_FORMAT_OPTIONS,
             index=0 if current_api_format == "openai" else 1,
             help=t("OpenAI format or Anthropic format"),
             key="api_format_selectbox"
@@ -93,36 +103,26 @@ def page_setting():
     with st.expander(t("Subtitles Settings"), expanded=True):
         c1, c2 = st.columns(2)
         with c1:
-            langs = {
-                "🇺🇸 English": "en",
-                "🇨🇳 简体中文": "zh",
-                "🇪🇸 Español": "es",
-                "🇷🇺 Русский": "ru",
-                "🇫🇷 Français": "fr",
-                "🇩🇪 Deutsch": "de",
-                "🇮🇹 Italiano": "it",
-                "🇯🇵 日本語": "ja"
-            }
             current_asr_lang = load_key("asr.language")
             if "prev_asr_language" not in st.session_state:
                 st.session_state.prev_asr_language = current_asr_lang
 
             lang = st.selectbox(
                 t("Recog Lang"),
-                options=list(langs.keys()),
-                index=list(langs.values()).index(current_asr_lang),
+                options=list(ASR_LANGUAGE_OPTIONS.keys()),
+                index=list(ASR_LANGUAGE_OPTIONS.values()).index(current_asr_lang),
                 key="asr_lang_selectbox"
             )
-            if langs[lang] != st.session_state.prev_asr_language:
-                update_key("asr.language", langs[lang])
-                st.session_state.prev_asr_language = langs[lang]
+            if ASR_LANGUAGE_OPTIONS[lang] != st.session_state.prev_asr_language:
+                update_key("asr.language", ASR_LANGUAGE_OPTIONS[lang])
+                st.session_state.prev_asr_language = ASR_LANGUAGE_OPTIONS[lang]
                 st.rerun()
 
         current_asr_runtime = load_key("asr.runtime")
         if "prev_asr_runtime" not in st.session_state:
             st.session_state.prev_asr_runtime = current_asr_runtime
 
-        runtime = st.selectbox(t("ASR Service"), options=["elevenlabs", "openai"], index=0 if current_asr_runtime == "elevenlabs" else 1, help=t("ElevenLabs ASR or OpenAI Whisper API"), key="asr_runtime_selectbox")
+        runtime = st.selectbox(t("ASR Service"), options=ASR_RUNTIME_OPTIONS, index=0 if current_asr_runtime == "elevenlabs" else 1, help=t("ElevenLabs ASR or OpenAI Whisper API"), key="asr_runtime_selectbox")
         if runtime != st.session_state.prev_asr_runtime:
             update_key("asr.runtime", runtime)
             st.session_state.prev_asr_runtime = runtime
@@ -144,12 +144,11 @@ def page_setting():
             update_key("burn_subtitles", burn_subtitles)
             st.rerun()
     with st.expander(t("Dubbing Settings"), expanded=True):
-        tts_methods = ["edge_tts", "openai_tts"]
         current_tts = load_key("tts_method")
         if "prev_tts_method" not in st.session_state:
             st.session_state.prev_tts_method = current_tts
 
-        select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(current_tts) if current_tts in tts_methods else 0, key="tts_method_selectbox")
+        select_tts = st.selectbox(t("TTS Method"), options=TTS_METHOD_OPTIONS, index=TTS_METHOD_OPTIONS.index(current_tts) if current_tts in TTS_METHOD_OPTIONS else 0, key="tts_method_selectbox")
         if select_tts != st.session_state.prev_tts_method:
             update_key("tts_method", select_tts)
             st.session_state.prev_tts_method = select_tts
@@ -164,27 +163,25 @@ def page_setting():
             config_input(t("OpenAI Base URL"), "openai_tts.base_url", key_suffix="tts_url", placeholder="https://api.openai.com/v1")
 
             # Voice selection
-            voice_options = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
-            current_voice = load_key("openai_tts.voice") or "alloy"
+            current_voice = load_key("openai_tts.voice") or DEFAULT_OPENAI_TTS_VOICE
             if "prev_openai_voice" not in st.session_state:
                 st.session_state.prev_openai_voice = current_voice
 
             selected_voice = st.selectbox(
                 t("OpenAI Voice"),
-                options=voice_options,
-                index=voice_options.index(current_voice) if current_voice in voice_options else 0,
+                options=OPENAI_TTS_VOICE_OPTIONS,
+                index=OPENAI_TTS_VOICE_OPTIONS.index(current_voice) if current_voice in OPENAI_TTS_VOICE_OPTIONS else 0,
                 key="openai_voice_selectbox"
             )
             # Model selection
-            model_options = ["tts-1", "tts-1-hd"]
-            current_model = load_key("openai_tts.model") or "tts-1"
+            current_model = load_key("openai_tts.model") or DEFAULT_OPENAI_TTS_MODEL
             if "prev_openai_model" not in st.session_state:
                 st.session_state.prev_openai_model = current_model
 
             selected_model = st.selectbox(
                 t("OpenAI Model"),
-                options=model_options,
-                index=model_options.index(current_model) if current_model in model_options else 0,
+                options=OPENAI_TTS_MODEL_OPTIONS,
+                index=OPENAI_TTS_MODEL_OPTIONS.index(current_model) if current_model in OPENAI_TTS_MODEL_OPTIONS else 0,
                 key="openai_model_selectbox"
             )
             if selected_model != st.session_state.prev_openai_model:

@@ -1,3 +1,4 @@
+import os
 import platform
 import subprocess
 
@@ -49,6 +50,11 @@ def merge_video_audio():
     normalized_dub_audio = 'output/normalized_dub.wav'
     normalize_audio_volume(DUB_AUDIO, normalized_dub_audio)
 
+    # Check if background audio exists (from Demucs vocal separation)
+    background_file = _BACKGROUND_AUDIO_FILE if os.path.exists(_BACKGROUND_AUDIO_FILE) else None
+    if background_file:
+        rprint("[cyan]🎵 Background audio detected, will mix with dub audio[/cyan]")
+
     # Merge video and audio with translated subtitles
     video = cv2.VideoCapture(VIDEO_FILE)
     TARGET_WIDTH = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -61,19 +67,36 @@ def merge_video_audio():
 
     if burn_subtitles:
         # Try to use subtitles filter (requires libass support in FFmpeg)
-        cmd = [
-            'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', normalized_dub_audio,
-            '-filter_complex',
-            f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,'
-            f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,'
-            f"subtitles=filename={DUB_SUB_FILE}[v]"
-        ]
+        if background_file:
+            # Mix background audio with dub audio using amix
+            cmd = [
+                'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', background_file, '-i', normalized_dub_audio,
+                '-filter_complex',
+                f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,'
+                f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,'
+                f"subtitles=filename={DUB_SUB_FILE}[v];"
+                f'[1:a][2:a]amix=inputs=2:duration=first:dropout_transition=3[a]'
+            ]
+        else:
+            cmd = [
+                'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', normalized_dub_audio,
+                '-filter_complex',
+                f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,'
+                f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,'
+                f"subtitles=filename={DUB_SUB_FILE}[v]"
+            ]
 
         if load_key("ffmpeg_gpu"):
             rprint("[bold green]Using GPU acceleration...[/bold green]")
-            cmd.extend(['-map', '[v]', '-map', '1:a', '-c:v', 'h264_nvenc'])
+            if background_file:
+                cmd.extend(['-map', '[v]', '-map', '[a]', '-c:v', 'h264_nvenc'])
+            else:
+                cmd.extend(['-map', '[v]', '-map', '1:a', '-c:v', 'h264_nvenc'])
         else:
-            cmd.extend(['-map', '[v]', '-map', '1:a'])
+            if background_file:
+                cmd.extend(['-map', '[v]', '-map', '[a]'])
+            else:
+                cmd.extend(['-map', '[v]', '-map', '1:a'])
 
         cmd.extend(['-c:a', 'aac', '-b:a', '96k', DUB_VIDEO])
 
@@ -94,15 +117,32 @@ def merge_video_audio():
 
     # Fallback: merge without subtitles
     if not burn_subtitles:
-        cmd = [
-            'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', normalized_dub_audio,
-        ]
+        if background_file:
+            # Mix background audio with dub audio
+            cmd = [
+                'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', background_file, '-i', normalized_dub_audio,
+                '-filter_complex',
+                f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,'
+                f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,'
+                f'setsar=1[v];'
+                f'[1:a][2:a]amix=inputs=2:duration=first:dropout_transition=3[a]'
+            ]
+        else:
+            cmd = [
+                'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', normalized_dub_audio,
+            ]
 
         if load_key("ffmpeg_gpu"):
             rprint("[bold green]Using GPU acceleration...[/bold green]")
-            cmd.extend(['-map', '0:v', '-map', '1:a', '-c:v', 'h264_nvenc'])
+            if background_file:
+                cmd.extend(['-map', '[v]', '-map', '[a]', '-c:v', 'h264_nvenc'])
+            else:
+                cmd.extend(['-map', '0:v', '-map', '1:a', '-c:v', 'h264_nvenc'])
         else:
-            cmd.extend(['-map', '0:v', '-map', '1:a'])
+            if background_file:
+                cmd.extend(['-map', '[v]', '-map', '[a]'])
+            else:
+                cmd.extend(['-map', '0:v', '-map', '1:a'])
 
         cmd.extend(['-c:a', 'aac', '-b:a', '96k', DUB_VIDEO])
 

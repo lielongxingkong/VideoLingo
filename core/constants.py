@@ -19,6 +19,10 @@ DEFAULT_ASR_ELEVENLABS_API_KEY = ""
 DEFAULT_ASR_OPENAI_API_KEY = ""
 DEFAULT_ASR_OPENAI_BASE_URL = "https://www.dmxapi.cn"
 
+# ==================== Demucs Settings ====================
+DEFAULT_DEMUCS_ENABLED = False
+DEFAULT_DEMUCS_MODEL = "htdemucs"
+
 # ==================== Subtitle Settings ====================
 DEFAULT_TARGET_LANGUAGE = "简体中文"
 DEFAULT_BURN_SUBTITLES = True

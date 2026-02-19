@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+import os
 from translations.translations import translate as t
 from translations.translations import DISPLAY_LANGUAGES
 from core.utils.config_utils import DEFAULT_CONFIG, load_key, update_key, save_config_to_file, load_config_from_file
@@ -31,6 +32,17 @@ def page_setting():
     # Initialize session state with defaults
     if "config" not in st.session_state:
         st.session_state.config = DEFAULT_CONFIG.copy()
+        # Try to load from config file if exists
+        config_path = DEFAULT_CONFIG.get("config_file_path", "./videolingo_config.json")
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    imported_config = json.load(f)
+                # Merge with DEFAULT_CONFIG to ensure all keys exist
+                st.session_state.config = DEFAULT_CONFIG.copy()
+                st.session_state.config.update(imported_config)
+            except Exception:
+                pass
 
     # Configuration management
     with st.expander(t("Configuration Management") + " 💾", expanded=False):
@@ -142,6 +154,16 @@ def page_setting():
         burn_subtitles = st.toggle(t("Burn-in Subtitles"), value=load_key("burn_subtitles"), help=t("Whether to burn subtitles into the video, will increase processing time"))
         if burn_subtitles != load_key("burn_subtitles"):
             update_key("burn_subtitles", burn_subtitles)
+            st.rerun()
+
+        # Demucs vocal separation
+        demucs_enabled = st.toggle(
+            t("Enable Demucs Vocal Separation"),
+            value=load_key("demucs.enabled"),
+            help=t("Separate vocals from background audio before ASR")
+        )
+        if demucs_enabled != load_key("demucs.enabled"):
+            update_key("demucs.enabled", demucs_enabled)
             st.rerun()
     with st.expander(t("Dubbing Settings"), expanded=True):
         current_tts = load_key("tts_method")

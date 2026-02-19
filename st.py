@@ -17,7 +17,7 @@ from core.st_utils.imports_and_utils import (
 from core.st_utils.sidebar_setting import page_setting
 from core.st_utils.download_video_section import download_video_section
 from translations.translations import translate as t
-from core.utils.config_utils import load_key
+from core.utils.config_utils import load_key, RUNTIME_CONFIG
 
 # Lazy load core modules only when needed
 def get_core_modules():
@@ -75,6 +75,9 @@ def text_processing_section():
             return True
 
 def process_text():
+    # Set runtime config for worker threads
+    RUNTIME_CONFIG.update(st.session_state.config)
+
     mods = get_core_modules()
     with st.spinner(t("Using Whisper for transcription...")):
         mods['_2_asr'].transcribe()
@@ -124,6 +127,9 @@ def audio_processing_section():
                 st.rerun()
 
 def process_audio():
+    # Set runtime config for worker threads
+    RUNTIME_CONFIG.update(st.session_state.config)
+
     mods = get_core_modules()
     with st.spinner(t("Generate audio tasks")):
         mods['_8_1_audio_task'].gen_audio_task_main()

@@ -5,6 +5,9 @@ import threading
 
 lock = threading.Lock()
 
+# Runtime config for worker threads (set before pipeline starts)
+RUNTIME_CONFIG = {}
+
 # -----------------------
 # Import constants
 # -----------------------
@@ -25,6 +28,8 @@ from core.constants import (
     DEFAULT_ASR_ELEVENLABS_API_KEY,
     DEFAULT_ASR_OPENAI_API_KEY,
     DEFAULT_ASR_OPENAI_BASE_URL,
+    DEFAULT_DEMUCS_ENABLED,
+    DEFAULT_DEMUCS_MODEL,
     DEFAULT_TARGET_LANGUAGE,
     DEFAULT_BURN_SUBTITLES,
     DEFAULT_SUBTITLE_MAX_LENGTH,
@@ -81,6 +86,10 @@ DEFAULT_CONFIG = {
     "asr.elevenlabs_api_key": DEFAULT_ASR_ELEVENLABS_API_KEY,
     "asr.openai_api_key": DEFAULT_ASR_OPENAI_API_KEY,
     "asr.openai_base_url": DEFAULT_ASR_OPENAI_BASE_URL,
+
+    # Demucs
+    "demucs.enabled": DEFAULT_DEMUCS_ENABLED,
+    "demucs.model": DEFAULT_DEMUCS_MODEL,
 
     # Subtitle
     "target_language": DEFAULT_TARGET_LANGUAGE,
@@ -163,19 +172,19 @@ def _load_config_from_file():
     return _config_file_cache
 
 def load_key(key):
-    """Load config value from session_state, config file, or DEFAULT_CONFIG"""
-    # First try to get from session_state (Streamlit context)
+    """Load config value from RUNTIME_CONFIG, session_state, or DEFAULT_CONFIG"""
+    # First try RUNTIME_CONFIG (for worker threads)
+    if key in RUNTIME_CONFIG and RUNTIME_CONFIG[key] is not None:
+        return RUNTIME_CONFIG[key]
+
+    # Then try session_state (Streamlit context)
     if hasattr(st, 'session_state') and st.session_state:
         config = st.session_state.get("config", {})
-        if config is not None:
-            # Use key directly (flat key structure, not nested)
-            if key in config and config[key]:
-                return config[key]
-
-    # Try to load from config file (for worker threads)
-    file_config = _load_config_from_file()
-    if file_config and key in file_config and file_config[key]:
-        return file_config[key]
+        if config is not None and key in config:
+            value = config[key]
+            # Check if value is not None (allow False, 0, empty string)
+            if value is not None:
+                return value
 
     # Fallback to DEFAULT_CONFIG
     return DEFAULT_CONFIG.get(key)

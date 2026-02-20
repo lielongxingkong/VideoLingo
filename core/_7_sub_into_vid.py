@@ -76,49 +76,39 @@ def merge_subtitles_to_video():
     )
 
     ffmpeg_gpu = load_key("ffmpeg_gpu")
-    gpu_success = False
 
-    # Try GPU first if enabled and available
+    # Try GPU if enabled and available
     if ffmpeg_gpu:
-        # Check if GPU is available and get the encoder name
         gpu_encoder = check_gpu_available()
         if gpu_encoder:
-            try:
-                rprint(f"[bold green]Using GPU acceleration ({gpu_encoder})...[/bold green]")
-                gpu_stream = ffmpeg.input(video_file)
-                gpu_stream = ffmpeg.output(
-                    gpu_stream,
-                    OUTPUT_VIDEO,
-                    vf=filter_str,
-                    vcodec=gpu_encoder,
-                    acodec='aac',
-                    y=None
-                )
-                ffmpeg.run(gpu_stream, overwrite_output=True, quiet=True)
-                gpu_success = True
-            except ffmpeg.Error:
-                # Any GPU error falls back to CPU
-                show_warning("⚠️ GPU acceleration failed, falling back to CPU...")
-        else:
-            show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
-
-    # Use CPU if GPU failed or not enabled
-    if not gpu_success:
-        try:
-            rprint("[bold green]Using CPU for encoding...[/bold green]")
-            cpu_stream = ffmpeg.input(video_file)
-            cpu_stream = ffmpeg.output(
-                cpu_stream,
+            rprint(f"[bold green]Using GPU acceleration ({gpu_encoder})...[/bold green]")
+            gpu_stream = ffmpeg.input(video_file)
+            gpu_stream = ffmpeg.output(
+                gpu_stream,
                 OUTPUT_VIDEO,
                 vf=filter_str,
-                vcodec='libx264',
+                vcodec=gpu_encoder,
                 acodec='aac',
                 y=None
             )
-            ffmpeg.run(cpu_stream, overwrite_output=True, quiet=True)
-        except ffmpeg.Error as e:
-            show_warning(f"⚠️ CPU encoding also failed: {str(e)[:100]}")
-            raise
+            ffmpeg.run(gpu_stream, overwrite_output=True, quiet=True)
+            return  # Success
+
+        # GPU not available, fall back to CPU
+        show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
+
+    # Use CPU
+    rprint("[bold green]Using CPU for encoding...[/bold green]")
+    cpu_stream = ffmpeg.input(video_file)
+    cpu_stream = ffmpeg.output(
+        cpu_stream,
+        OUTPUT_VIDEO,
+        vf=filter_str,
+        vcodec='libx264',
+        acodec='aac',
+        y=None
+    )
+    ffmpeg.run(cpu_stream, overwrite_output=True, quiet=True)
 
     rprint(f"\n✅ Done! Time taken: {time.time() - start_time:.2f} seconds")
 

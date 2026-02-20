@@ -257,8 +257,7 @@ def merge_video_audio():
             filter_str = None
             filter_complex = None
 
-    # Try GPU first if enabled and available
-    gpu_success = False
+    # Try GPU if enabled and available
     if ffmpeg_gpu:
         gpu_encoder = check_gpu_available()
         if gpu_encoder:
@@ -268,18 +267,18 @@ def merge_video_audio():
                 filter_str, filter_complex, DUB_VIDEO,
                 TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles, gpu_encoder
             )
-            if not gpu_success:
-                show_warning("⚠️ GPU acceleration failed, falling back to CPU...")
-        else:
-            show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
+            if gpu_success:
+                return  # Success
 
-    # Use CPU if GPU failed or not enabled
-    if not gpu_success:
-        merge_with_cpu(
-            VIDEO_FILE, background_file, normalized_dub_audio,
-            filter_str, filter_complex, DUB_VIDEO,
-            TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles
-        )
+        # GPU not available, fall back to CPU
+        show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
+
+    # Use CPU
+    merge_with_cpu(
+        VIDEO_FILE, background_file, normalized_dub_audio,
+        filter_str, filter_complex, DUB_VIDEO,
+        TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles
+    )
 
     rprint(f"[bold green]Video and audio successfully merged into {DUB_VIDEO}[/bold green]")
 

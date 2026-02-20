@@ -27,6 +27,21 @@ def show_warning(message):
     if IN_STREAMLIT:
         st.warning(message)
 
+
+def check_gpu_available():
+    """Check if h264_nvenc encoder is available via ffmpeg"""
+    try:
+        import subprocess
+        result = subprocess.run(
+            ['ffmpeg', '-hide_banner', '-encoders'],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        return 'h264_nvenc' in result.stdout
+    except:
+        return False
+
 DUB_VIDEO = "output/output_dub.mp4"
 DUB_SUB_FILE = 'output/dub.srt'
 DUB_AUDIO = 'output/dub.mp3'
@@ -256,16 +271,19 @@ def merge_video_audio():
             filter_str = None
             filter_complex = None
 
-    # Try GPU first if enabled
+    # Try GPU first if enabled and available
     gpu_success = False
     if ffmpeg_gpu:
-        console.print("[bold green]Using GPU acceleration...[/bold green]")
-        gpu_success = merge_with_gpu(
-            VIDEO_FILE, background_file, normalized_dub_audio,
-            filter_str, filter_complex, DUB_VIDEO,
-            TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles
-        )
-        if not gpu_success:
+        if check_gpu_available():
+            console.print("[bold green]Using GPU acceleration...[/bold green]")
+            gpu_success = merge_with_gpu(
+                VIDEO_FILE, background_file, normalized_dub_audio,
+                filter_str, filter_complex, DUB_VIDEO,
+                TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles
+            )
+            if not gpu_success:
+                show_warning("⚠️ GPU acceleration failed, falling back to CPU...")
+        else:
             show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
 
     # Use CPU if GPU failed or not enabled

@@ -17,6 +17,21 @@ def show_warning(message):
     if IN_STREAMLIT:
         st.warning(message)
 
+
+def check_gpu_available():
+    """Check if h264_nvenc encoder is available via ffmpeg"""
+    try:
+        import subprocess
+        result = subprocess.run(
+            ['ffmpeg', '-hide_banner', '-encoders'],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        return 'h264_nvenc' in result.stdout
+    except:
+        return False
+
 OUTPUT_DIR = "output"
 OUTPUT_VIDEO = f"{OUTPUT_DIR}/output_sub.mp4"
 SRC_SRT = f"{OUTPUT_DIR}/src.srt"
@@ -77,23 +92,27 @@ def merge_subtitles_to_video():
     ffmpeg_gpu = load_key("ffmpeg_gpu")
     gpu_success = False
 
-    # Try GPU first if enabled
+    # Try GPU first if enabled and available
     if ffmpeg_gpu:
-        try:
-            rprint("[bold green]Using GPU acceleration...[/bold green]")
-            gpu_stream = ffmpeg.input(video_file)
-            gpu_stream = ffmpeg.output(
-                gpu_stream,
-                OUTPUT_VIDEO,
-                vf=filter_str,
-                vcodec='h264_nvenc',
-                acodec='aac',
-                y=None
-            )
-            ffmpeg.run(gpu_stream, overwrite_output=True, quiet=True)
-            gpu_success = True
-        except ffmpeg.Error:
-            # Any GPU error falls back to CPU
+        # First check if GPU is actually available
+        if check_gpu_available():
+            try:
+                rprint("[bold green]Using GPU acceleration...[/bold green]")
+                gpu_stream = ffmpeg.input(video_file)
+                gpu_stream = ffmpeg.output(
+                    gpu_stream,
+                    OUTPUT_VIDEO,
+                    vf=filter_str,
+                    vcodec='h264_nvenc',
+                    acodec='aac',
+                    y=None
+                )
+                ffmpeg.run(gpu_stream, overwrite_output=True, quiet=True)
+                gpu_success = True
+            except ffmpeg.Error:
+                # Any GPU error falls back to CPU
+                show_warning("⚠️ GPU acceleration failed, falling back to CPU...")
+        else:
             show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
 
     # Use CPU if GPU failed or not enabled

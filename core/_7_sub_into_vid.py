@@ -19,11 +19,8 @@ def show_warning(message):
 
 
 def check_gpu_available():
-    """Check if h264_nvenc encoder is available via ffmpeg"""
+    """Check if hardware acceleration encoder is available via ffmpeg"""
     import platform
-    # h264_nvenc is only available on NVIDIA GPUs (Linux/Windows), not macOS
-    if platform.system() == 'Darwin':
-        return False
     try:
         import subprocess
         result = subprocess.run(
@@ -32,7 +29,17 @@ def check_gpu_available():
             text=True,
             timeout=10
         )
-        return 'h264_nvenc' in result.stdout
+        encoders = result.stdout
+
+        # NVIDIA GPU (Linux/Windows) - h264_nvenc
+        if platform.system() != 'Darwin':
+            return 'h264_nvenc' in encoders
+
+        # Apple Silicon (M1+) - h264_videotoolbox
+        if platform.system() == 'Darwin':
+            return 'h264_videotoolbox' in encoders
+
+        return False
     except:
         return False
 
@@ -93,21 +100,28 @@ def merge_subtitles_to_video():
         f"subtitles={TRANS_SRT}:force_style='{trans_style}'"
     )
 
+    import platform
     ffmpeg_gpu = load_key("ffmpeg_gpu")
     gpu_success = False
+
+    # Determine which hardware encoder to use
+    if platform.system() == 'Darwin':
+        gpu_encoder = 'h264_videotoolbox'
+    else:
+        gpu_encoder = 'h264_nvenc'
 
     # Try GPU first if enabled and available
     if ffmpeg_gpu:
         # First check if GPU is actually available
         if check_gpu_available():
             try:
-                rprint("[bold green]Using GPU acceleration...[/bold green]")
+                rprint(f"[bold green]Using GPU acceleration ({gpu_encoder})...[/bold green]")
                 gpu_stream = ffmpeg.input(video_file)
                 gpu_stream = ffmpeg.output(
                     gpu_stream,
                     OUTPUT_VIDEO,
                     vf=filter_str,
-                    vcodec='h264_nvenc',
+                    vcodec=gpu_encoder,
                     acodec='aac',
                     y=None
                 )

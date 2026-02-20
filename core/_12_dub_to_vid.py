@@ -29,11 +29,8 @@ def show_warning(message):
 
 
 def check_gpu_available():
-    """Check if h264_nvenc encoder is available via ffmpeg"""
+    """Check if hardware acceleration encoder is available via ffmpeg"""
     import platform
-    # h264_nvenc is only available on NVIDIA GPUs (Linux/Windows), not macOS
-    if platform.system() == 'Darwin':
-        return False
     try:
         import subprocess
         result = subprocess.run(
@@ -42,7 +39,17 @@ def check_gpu_available():
             text=True,
             timeout=10
         )
-        return 'h264_nvenc' in result.stdout
+        encoders = result.stdout
+
+        # NVIDIA GPU (Linux/Windows) - h264_nvenc
+        if platform.system() != 'Darwin':
+            return gpu_encoder in encoders
+
+        # Apple Silicon (M1+) - h264_videotoolbox
+        if platform.system() == 'Darwin':
+            return 'h264_videotoolbox' in encoders
+
+        return False
     except:
         return False
 
@@ -66,6 +73,13 @@ TRANS_BACK_COLOR = '&H33000000'
 def merge_with_gpu(input_video, background_file, normalized_dub_audio,
                    filter_str, filter_complex, DUB_VIDEO, TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles):
     """Try to merge with GPU acceleration"""
+    import platform
+    # Determine GPU encoder based on platform
+    if platform.system() == 'Darwin':
+        gpu_encoder = 'h264_videotoolbox'
+    else:
+        gpu_encoder = gpu_encoder
+
     try:
         if burn_subtitles:
             if background_file:
@@ -74,7 +88,7 @@ def merge_with_gpu(input_video, background_file, normalized_dub_audio,
                 dub = ffmpeg.input(normalized_dub_audio)
                 output_kwargs = {
                     'y': None,
-                    'c:v': 'h264_nvenc',
+                    'c:v': gpu_encoder,
                     'c:a': 'aac',
                     'b:a': '96k',
                 }
@@ -90,7 +104,7 @@ def merge_with_gpu(input_video, background_file, normalized_dub_audio,
                 output_kwargs = {
                     'y': None,
                     'vf': filter_str,
-                    'c:v': 'h264_nvenc',
+                    'c:v': gpu_encoder,
                     'c:a': 'aac',
                     'b:a': '96k',
                 }
@@ -106,7 +120,7 @@ def merge_with_gpu(input_video, background_file, normalized_dub_audio,
                 dub = ffmpeg.input(normalized_dub_audio)
                 output_kwargs = {
                     'y': None,
-                    'c:v': 'h264_nvenc',
+                    'c:v': gpu_encoder,
                     'c:a': 'aac',
                     'b:a': '96k',
                 }
@@ -121,7 +135,7 @@ def merge_with_gpu(input_video, background_file, normalized_dub_audio,
                 dub = ffmpeg.input(normalized_dub_audio)
                 output_kwargs = {
                     'y': None,
-                    'c:v': 'h264_nvenc',
+                    'c:v': gpu_encoder,
                     'c:a': 'aac',
                     'b:a': '96k',
                 }

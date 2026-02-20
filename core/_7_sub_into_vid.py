@@ -104,16 +104,21 @@ def merge_subtitles_to_video():
 
     # Use CPU if GPU failed or not enabled
     if not gpu_success:
-        cpu_stream = ffmpeg.input(video_file)
-        cpu_stream = ffmpeg.output(
-            cpu_stream,
-            OUTPUT_VIDEO,
-            vf=filter_str,
-            vcodec='libx264',
-            acodec='aac',
-            y=None
-        )
-        ffmpeg.run(cpu_stream, overwrite_output=True, quiet=True)
+        try:
+            rprint("[bold green]Using CPU for encoding...[/bold green]")
+            cpu_stream = ffmpeg.input(video_file)
+            cpu_stream = ffmpeg.output(
+                cpu_stream,
+                OUTPUT_VIDEO,
+                vf=filter_str,
+                vcodec='libx264',
+                acodec='aac',
+                y=None
+            )
+            ffmpeg.run(cpu_stream, overwrite_output=True, quiet=True)
+        except ffmpeg.Error as e:
+            show_warning(f"⚠️ CPU encoding also failed: {str(e)[:100]}")
+            raise
 
     rprint(f"\n✅ Done! Time taken: {time.time() - start_time:.2f} seconds")
 

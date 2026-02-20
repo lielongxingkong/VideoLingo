@@ -17,39 +17,28 @@ from core.constants import (
 )
 from core.utils import *
 
-# Common edge-tts voices by language (voice: (locale, gender))
+# Common edge-tts voices by language (voice: (display_name, locale, gender, style))
 EDGE_TTS_VOICE_OPTIONS = {
-    # Chinese
-    "zh-CN-XiaoxiaoNeural": ("中文", "女"),
-    "zh-CN-XiaoyiNeural": ("中文", "女"),
-    "zh-CN-YunjianNeural": ("中文", "男"),
-    "zh-HK-HiuGaaiNeural": ("粤语", "女"),
-    "zh-HK-HiuMaanNeural": ("粤语", "女"),
-    # English
-    "en-US-JennyNeural": ("英语", "女"),
-    "en-US-GuyNeural": ("英语", "男"),
-    "en-US-EmmaNeural": ("英语", "女"),
-    "en-GB-SoniaNeural": ("英语", "女"),
-    "en-AU-NatashaNeural": ("英语", "女"),
-    # Japanese
-    "ja-JP-NanamiNeural": ("日语", "女"),
-    "ja-JP-KeitaNeural": ("日语", "男"),
-    # Korean
-    "ko-KR-SunHiNeural": ("韩语", "女"),
-    "ko-KR-HyunsuMultilingualNeural": ("韩语", "男"),
-    # European
-    "es-ES-XimenaNeural": ("西班牙语", "女"),
-    "fr-FR-DeniseNeural": ("法语", "女"),
-    "de-DE-AmalaNeural": ("德语", "女"),
-    "ru-RU-SvetlanaNeural": ("俄语", "女"),
+    # Chinese (Mainland)
+    "zh-CN-XiaoxiaoNeural": ("XiaoxiaoNeural", "中文", "女", "新闻/小说-温暖"),
+    "zh-CN-XiaoyiNeural": ("XiaoyiNeural", "中文", "女", "卡通/小说-活泼"),
+    "zh-CN-YunjianNeural": ("YunjianNeural", "中文", "男", "体育/小说-热情"),
+    "zh-CN-YunxiNeural": ("YunxiNeural", "中文", "男", "小说-活泼/阳光"),
+    "zh-CN-YunxiaNeural": ("YunxiaNeural", "中文", "男", "卡通/小说-可爱"),
+    "zh-CN-YunyangNeural": ("YunyangNeural", "中文", "男", "新闻-专业/可靠"),
+    "zh-CN-liaoning-XiaobeiNeural": ("liaoning-XiaobeiNeural", "中文东北", "女", "方言-幽默"),
+    "zh-CN-shaanxi-XiaoniNeural": ("shaanxi-XiaoniNeural", "中文陕西", "女", "方言-明亮"),
 }
 
 
 def get_edge_voice_display(voice):
     """Get display text for voice"""
     if voice in EDGE_TTS_VOICE_OPTIONS:
-        lang, gender = EDGE_TTS_VOICE_OPTIONS[voice]
-        return f"{voice} ({lang}-{gender})"
+        display_name, lang, gender, style = EDGE_TTS_VOICE_OPTIONS[voice]
+        if style:
+            return f"{display_name} ({lang}-{gender}-{style})"
+        else:
+            return f"{display_name} ({lang}-{gender})"
     return voice
 
 

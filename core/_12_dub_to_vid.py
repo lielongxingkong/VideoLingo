@@ -114,11 +114,9 @@ def merge_with_gpu(input_video, background_file, normalized_dub_audio,
 
         ffmpeg.run(stream, overwrite_output=True, quiet=True)
         return True
-    except ffmpeg.Error as e:
-        stderr = e.stderr.decode() if e.stderr else str(e)
-        if 'h264_nvenc' in stderr or 'No such device' in stderr or 'Cannot load' in stderr or 'Invalid argument' in stderr:
-            return False
-        raise e
+    except ffmpeg.Error:
+        # Any GPU error falls back to CPU
+        return False
 
 
 def merge_with_cpu(input_video, background_file, normalized_dub_audio,

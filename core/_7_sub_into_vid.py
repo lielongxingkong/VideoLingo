@@ -92,13 +92,9 @@ def merge_subtitles_to_video():
             )
             ffmpeg.run(gpu_stream, overwrite_output=True, quiet=True)
             gpu_success = True
-        except ffmpeg.Error as e:
-            stderr = e.stderr.decode() if e.stderr else str(e)
-            if 'h264_nvenc' in stderr or 'No such device' in stderr or 'Cannot load' in stderr or 'Invalid argument' in stderr:
-                show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
-                ffmpeg_gpu = False
-            else:
-                raise e
+        except ffmpeg.Error:
+            # Any GPU error falls back to CPU
+            show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
 
     # Use CPU if GPU failed or not enabled
     if not gpu_success:

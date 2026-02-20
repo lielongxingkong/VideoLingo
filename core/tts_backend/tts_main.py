@@ -7,7 +7,6 @@ from pydub import AudioSegment
 from core.asr_backend.audio_preprocess import get_audio_duration
 from core.tts_backend.edge_tts import edge_tts
 from core.tts_backend.openai_tts import openai_tts_for_videolingo
-from core.tts_backend.openai_audio_preview import openai_audio_preview_for_videolingo
 from core.prompts import get_correct_text_prompt
 from core.utils import *
 
@@ -61,9 +60,7 @@ def tts_main(text, save_as, number, task_df):
                 edge_tts(text, save_as)
             elif TTS_METHOD == 'openai_tts':
                 openai_tts_for_videolingo(text, save_as)
-            elif TTS_METHOD == 'openai_audio_preview':
-                openai_audio_preview_for_videolingo(text, save_as)
-                
+
             # Check generated audio duration
             duration = get_audio_duration(save_as)
             if duration > 0:

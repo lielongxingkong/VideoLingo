@@ -31,6 +31,9 @@ def openai_audio_preview_for_videolingo(text, save_as):
     save_path = Path(save_as)
     save_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Get target language from config
+    target_language = load_key("target_language") or "Chinese"
+
     # Use gpt-4o-mini-audio-preview with chat completions API
     response = client.chat.completions.create(
         model="gpt-4o-mini-audio-preview",
@@ -39,7 +42,7 @@ def openai_audio_preview_for_videolingo(text, save_as):
         messages=[
             {
                 "role": "user",
-                "content": f"Please convert the following text to speech. Speak clearly and naturally: {text}"
+                "content": f"请用{target_language}语言朗读以下文本，要求清晰自然：{text}"
             }
         ]
     )

@@ -10,6 +10,7 @@ from core._1_ytdlp import find_video_files
 from core.asr_backend.audio_preprocess import normalize_audio_volume
 from core.utils import *
 from core.utils.models import *
+from core.utils.gpu_utils import check_gpu_available
 
 console = Console()
 
@@ -26,32 +27,6 @@ def show_warning(message):
     console.print(f"[bold yellow]{message}[/bold yellow]")
     if IN_STREAMLIT:
         st.warning(message)
-
-
-def check_gpu_available():
-    """Check if hardware acceleration encoder is available via ffmpeg"""
-    import platform
-    try:
-        import subprocess
-        result = subprocess.run(
-            ['ffmpeg', '-hide_banner', '-encoders'],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-        encoders = result.stdout
-
-        # NVIDIA GPU (Linux/Windows) - h264_nvenc
-        if platform.system() != 'Darwin':
-            return gpu_encoder in encoders
-
-        # Apple Silicon (M1+) - h264_videotoolbox
-        if platform.system() == 'Darwin':
-            return 'h264_videotoolbox' in encoders
-
-        return False
-    except:
-        return False
 
 DUB_VIDEO = "output/output_dub.mp4"
 DUB_SUB_FILE = 'output/dub.srt'
@@ -71,15 +46,8 @@ TRANS_BACK_COLOR = '&H33000000'
 
 
 def merge_with_gpu(input_video, background_file, normalized_dub_audio,
-                   filter_str, filter_complex, DUB_VIDEO, TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles):
+                   filter_str, filter_complex, DUB_VIDEO, TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles, gpu_encoder):
     """Try to merge with GPU acceleration"""
-    import platform
-    # Determine GPU encoder based on platform
-    if platform.system() == 'Darwin':
-        gpu_encoder = 'h264_videotoolbox'
-    else:
-        gpu_encoder = gpu_encoder
-
     try:
         if burn_subtitles:
             if background_file:
@@ -292,12 +260,13 @@ def merge_video_audio():
     # Try GPU first if enabled and available
     gpu_success = False
     if ffmpeg_gpu:
-        if check_gpu_available():
-            console.print("[bold green]Using GPU acceleration...[/bold green]")
+        gpu_encoder = check_gpu_available()
+        if gpu_encoder:
+            console.print(f"[bold green]Using GPU acceleration ({gpu_encoder})...[/bold green]")
             gpu_success = merge_with_gpu(
                 VIDEO_FILE, background_file, normalized_dub_audio,
                 filter_str, filter_complex, DUB_VIDEO,
-                TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles
+                TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles, gpu_encoder
             )
             if not gpu_success:
                 show_warning("⚠️ GPU acceleration failed, falling back to CPU...")

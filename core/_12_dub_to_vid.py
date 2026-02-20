@@ -269,6 +269,8 @@ def merge_video_audio():
             )
             if gpu_success:
                 return  # Success
+            # GPU available but failed - show error and raise
+            raise Exception(f"GPU acceleration ({gpu_encoder}) execution failed")
 
         # GPU not available, fall back to CPU
         show_warning("⚠️ GPU acceleration not available, falling back to CPU...")

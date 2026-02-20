@@ -81,21 +81,26 @@ def merge_subtitles_to_video():
     if ffmpeg_gpu:
         gpu_encoder = check_gpu_available()
         if gpu_encoder:
-            rprint(f"[bold green]Using GPU acceleration ({gpu_encoder})...[/bold green]")
-            gpu_stream = ffmpeg.input(video_file)
-            gpu_stream = ffmpeg.output(
-                gpu_stream,
-                OUTPUT_VIDEO,
-                vf=filter_str,
-                vcodec=gpu_encoder,
-                acodec='aac',
-                y=None
-            )
-            ffmpeg.run(gpu_stream, overwrite_output=True, quiet=True)
-            return  # Success
+            try:
+                rprint(f"[bold green]Using GPU acceleration ({gpu_encoder})...[/bold green]")
+                gpu_stream = ffmpeg.input(video_file)
+                gpu_stream = ffmpeg.output(
+                    gpu_stream,
+                    OUTPUT_VIDEO,
+                    vf=filter_str,
+                    vcodec=gpu_encoder,
+                    acodec='aac',
+                    y=None
+                )
+                ffmpeg.run(gpu_stream, overwrite_output=True, quiet=True)
+                return  # Success
+            except ffmpeg.Error:
+                # GPU execution failed, fall back to CPU
+                show_warning(f"⚠️ GPU acceleration ({gpu_encoder}) failed, falling back to CPU...")
 
         # GPU not available, fall back to CPU
-        show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
+        else:
+            show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
 
     # Use CPU
     rprint("[bold green]Using CPU for encoding...[/bold green]")

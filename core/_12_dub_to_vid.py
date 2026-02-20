@@ -48,6 +48,7 @@ TRANS_BACK_COLOR = '&H33000000'
 def merge_with_gpu(input_video, background_file, normalized_dub_audio,
                    filter_str, filter_complex, DUB_VIDEO, TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles, gpu_encoder):
     """Try to merge with GPU acceleration"""
+    import platform
     try:
         if burn_subtitles:
             if background_file:
@@ -269,8 +270,8 @@ def merge_video_audio():
             )
             if gpu_success:
                 return  # Success
-            # GPU available but failed - show error and raise
-            raise Exception(f"GPU acceleration ({gpu_encoder}) execution failed")
+            # GPU execution failed, fall back to CPU
+            show_warning(f"⚠️ GPU acceleration ({gpu_encoder}) failed, falling back to CPU...")
 
         # GPU not available, fall back to CPU
         show_warning("⚠️ GPU acceleration not available, falling back to CPU...")

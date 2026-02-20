@@ -17,6 +17,9 @@ def check_gpu_available():
             timeout=10
         )
         encoders = result.stdout
+        print(f"[DEBUG] Platform: {platform.system()}")
+        print(f"[DEBUG] Encoders contain h264_nvenc: {'h264_nvenc' in encoders}")
+        print(f"[DEBUG] Encoders contain h264_videotoolbox: {'h264_videotoolbox' in encoders}")
 
         # Apple Silicon (M1+) - h264_videotoolbox
         if platform.system() == 'Darwin':
@@ -29,5 +32,6 @@ def check_gpu_available():
             return 'h264_nvenc'
 
         return None
-    except:
+    except Exception as e:
+        print(f"[DEBUG] check_gpu_available exception: {e}")
         return None

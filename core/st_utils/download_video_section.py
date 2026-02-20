@@ -1,7 +1,7 @@
 import os
 import re
 import shutil
-import subprocess
+import ffmpeg
 from time import sleep
 
 import streamlit as st
@@ -72,8 +72,21 @@ def convert_audio_to_video(audio_file: str) -> str:
     output_video = os.path.join(OUTPUT_DIR, 'black_screen.mp4')
     if not os.path.exists(output_video):
         print(f"🎵➡️🎬 Converting audio to video with FFmpeg ......")
-        ffmpeg_cmd = ['ffmpeg', '-y', '-f', 'lavfi', '-i', 'color=c=black:s=640x360', '-i', audio_file, '-shortest', '-c:v', 'libx264', '-c:a', 'aac', '-pix_fmt', 'yuv420p', output_video]
-        subprocess.run(ffmpeg_cmd, check=True, capture_output=True, text=True, encoding='utf-8')
+        # Create black screen video source
+        black = ffmpeg.input('color=c=black:s=640x360', f='lavfi')
+        audio = ffmpeg.input(audio_file)
+        # Output with shortest duration
+        stream = ffmpeg.output(
+            black,
+            audio,
+            output_video,
+            shortest=None,
+            vcodec='libx264',
+            acodec='aac',
+            pix_fmt='yuv420p',
+            y=None
+        )
+        ffmpeg.run(stream, overwrite_output=True, quiet=True)
         print(f"🎵➡️🎬 Converted <{audio_file}> to <{output_video}> with FFmpeg\n")
         # delete audio file
         os.remove(audio_file)

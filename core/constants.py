@@ -47,8 +47,8 @@ DEFAULT_TTS_METHOD = "openai_tts"  # "openai_tts" or "edge_tts"
 # OpenAI TTS
 DEFAULT_OPENAI_TTS_API_KEY = ""
 DEFAULT_OPENAI_TTS_BASE_URL = "https://www.dmxapi.cn"
-DEFAULT_OPENAI_TTS_VOICE = "alloy"  # alloy, echo, fable, onyx, nova, shimmer
-DEFAULT_OPENAI_TTS_MODEL = "tts-1"  # tts-1, tts-1-hd
+DEFAULT_OPENAI_TTS_VOICE = "alloy"  # Not used for gpt-4o-mini-tts
+DEFAULT_OPENAI_TTS_MODEL = "gpt-4o-mini-tts"
 
 # Edge TTS
 DEFAULT_EDGE_TTS_VOICE = "zh-CN-XiaoxiaoNeural"
@@ -83,11 +83,9 @@ ASR_RUNTIME_OPTIONS = ["elevenlabs", "openai"]
 # TTS Method options
 TTS_METHOD_OPTIONS = ["edge_tts", "openai_tts"]
 
-# OpenAI TTS Voice options
+# OpenAI TTS voice options (used by gpt-4o-mini-tts)
 OPENAI_TTS_VOICE_OPTIONS = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
-
-# OpenAI TTS Model options
-OPENAI_TTS_MODEL_OPTIONS = ["tts-1", "tts-1-hd"]
+OPENAI_TTS_MODEL_OPTIONS = []
 
 # Language options for ASR
 ASR_LANGUAGE_OPTIONS = {

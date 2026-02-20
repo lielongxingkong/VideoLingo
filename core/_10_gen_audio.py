@@ -1,7 +1,7 @@
 import os
 import time
 import shutil
-import subprocess
+import ffmpeg
 
 import pandas as pd
 from pydub import AudioSegment
@@ -32,14 +32,20 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
     if abs(speed_factor - 1.0) < 0.001:
         shutil.copy2(input_file, output_file)
         return
-        
-    atempo = speed_factor
-    cmd = ['ffmpeg', '-i', input_file, '-filter:a', f'atempo={atempo}', '-y', output_file]
+
     input_duration = get_audio_duration(input_file)
     max_retries = 2
     for attempt in range(max_retries):
         try:
-            subprocess.run(cmd, check=True, stderr=subprocess.PIPE)
+            stream = ffmpeg.input(input_file)
+            stream = ffmpeg.output(
+                stream,
+                output_file,
+                filter_complex=f'atempo={speed_factor}',
+                y=None
+            )
+            ffmpeg.run(stream, overwrite_output=True, quiet=True)
+
             output_duration = get_audio_duration(output_file)
             expected_duration = input_duration / speed_factor
             diff = output_duration - expected_duration
@@ -53,7 +59,7 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
             elif output_duration >= expected_duration * 1.02:
                 raise Exception(f"Audio duration abnormal: input file={input_file}, output file={output_file}, speed factor={speed_factor}, input duration={input_duration:.2f}s, output duration={output_duration:.2f}s")
             return
-        except subprocess.CalledProcessError as e:
+        except ffmpeg.Error as e:
             if attempt < max_retries - 1:
                 rprint(f"[yellow]⚠️ Audio speed adjustment failed, retrying in 1s ({attempt + 1}/{max_retries})[/yellow]")
                 time.sleep(1)
@@ -74,7 +80,7 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> tuple[int, float]:
 
 def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
     """Generate TTS audio sequentially and calculate actual duration"""
-    tasks_df['real_dur'] = 0
+    tasks_df['real_dur'] = 0.0
     rprint("[bold green]🎯 Starting TTS audio generation...[/bold green]")
     
     with Progress() as progress:

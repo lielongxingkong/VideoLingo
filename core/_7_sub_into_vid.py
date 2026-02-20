@@ -3,6 +3,20 @@ import ffmpeg
 from core._1_ytdlp import find_video_files
 from core.utils import *
 
+# Check if we're in Streamlit environment
+try:
+    import streamlit as st
+    IN_STREAMLIT = True
+except ImportError:
+    IN_STREAMLIT = False
+
+
+def show_warning(message):
+    """Show warning message in both console and Streamlit UI if available"""
+    rprint(f"[bold yellow]{message}[/bold yellow]")
+    if IN_STREAMLIT:
+        st.warning(message)
+
 OUTPUT_DIR = "output"
 OUTPUT_VIDEO = f"{OUTPUT_DIR}/output_sub.mp4"
 SRC_SRT = f"{OUTPUT_DIR}/src.srt"
@@ -37,62 +51,69 @@ def merge_subtitles_to_video():
     rprint("🎬 Start merging subtitles to video...")
     start_time = time.time()
 
-    try:
-        # Use ffmpeg-python to build the command
-        stream = ffmpeg.input(video_file)
+    # Use ffmpeg-python to build the command
+    stream = ffmpeg.input(video_file)
 
-        # Get video info to check resolution
-        probe = ffmpeg.probe(video_file)
-        video_info = next(s for s in probe['streams'] if s['codec_type'] == 'video')
-        width = int(video_info['width'])
-        height = int(video_info['height'])
-        rprint(f"[bold green]Video resolution: {width}x{height}[/bold green]")
+    # Get video info to check resolution
+    probe = ffmpeg.probe(video_file)
+    video_info = next(s for s in probe['streams'] if s['codec_type'] == 'video')
+    width = int(video_info['width'])
+    height = int(video_info['height'])
+    rprint(f"[bold green]Video resolution: {width}x{height}[/bold green]")
 
-        # Build filter chain: scale + src_subtitle + trans_subtitle
-        # FFmpeg subtitles filter with force_style
-        src_style = f"FontSize={SRC_FONT_SIZE},PrimaryColour=&HFFFFFF,OutlineColour=&H000000"
-        trans_style = f"FontSize={TRANS_FONT_SIZE},PrimaryColour=&H00FFFF,OutlineColour=&H000000"
+    # Build filter chain: scale + src_subtitle + trans_subtitle
+    # FFmpeg subtitles filter with force_style
+    src_style = f"FontSize={SRC_FONT_SIZE},PrimaryColour=&HFFFFFF,OutlineColour=&H000000"
+    trans_style = f"FontSize={TRANS_FONT_SIZE},PrimaryColour=&H00FFFF,OutlineColour=&H000000"
 
-        # Chain subtitles filters using filter_complex
-        filter_str = (
-            f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
-            f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,"
-            f"subtitles={SRC_SRT}:force_style='{src_style}',"
-            f"subtitles={TRANS_SRT}:force_style='{trans_style}'"
-        )
+    # Chain subtitles filters using filter_complex
+    filter_str = (
+        f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
+        f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,"
+        f"subtitles={SRC_SRT}:force_style='{src_style}',"
+        f"subtitles={TRANS_SRT}:force_style='{trans_style}'"
+    )
 
-        ffmpeg_gpu = load_key("ffmpeg_gpu")
+    ffmpeg_gpu = load_key("ffmpeg_gpu")
+    gpu_success = False
 
-        if ffmpeg_gpu:
-            rprint("[bold green]Using GPU acceleration.[/bold green]")
-            stream = ffmpeg.output(
-                stream,
+    # Try GPU first if enabled
+    if ffmpeg_gpu:
+        try:
+            rprint("[bold green]Using GPU acceleration...[/bold green]")
+            gpu_stream = ffmpeg.input(video_file)
+            gpu_stream = ffmpeg.output(
+                gpu_stream,
                 OUTPUT_VIDEO,
                 vf=filter_str,
                 vcodec='h264_nvenc',
                 acodec='aac',
                 y=None
             )
-        else:
-            stream = ffmpeg.output(
-                stream,
-                OUTPUT_VIDEO,
-                vf=filter_str,
-                vcodec='libx264',
-                acodec='aac',
-                y=None
-            )
+            ffmpeg.run(gpu_stream, overwrite_output=True, quiet=True)
+            gpu_success = True
+        except ffmpeg.Error as e:
+            stderr = e.stderr.decode() if e.stderr else str(e)
+            if 'h264_nvenc' in stderr or 'No such device' in stderr or 'Cannot load' in stderr or 'Invalid argument' in stderr:
+                show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
+                ffmpeg_gpu = False
+            else:
+                raise e
 
-        ffmpeg.run(stream, overwrite_output=True, quiet=True)
+    # Use CPU if GPU failed or not enabled
+    if not gpu_success:
+        cpu_stream = ffmpeg.input(video_file)
+        cpu_stream = ffmpeg.output(
+            cpu_stream,
+            OUTPUT_VIDEO,
+            vf=filter_str,
+            vcodec='libx264',
+            acodec='aac',
+            y=None
+        )
+        ffmpeg.run(cpu_stream, overwrite_output=True, quiet=True)
 
-        rprint(f"\n✅ Done! Time taken: {time.time() - start_time:.2f} seconds")
-
-    except ffmpeg.Error as e:
-        rprint(f"\n❌ FFmpeg error: {e.stderr.decode() if e.stderr else str(e)}")
-    except Exception as e:
-        rprint(f"\n❌ Error occurred: {e}")
-        import traceback
-        traceback.print_exc()
+    rprint(f"\n✅ Done! Time taken: {time.time() - start_time:.2f} seconds")
 
 
 if __name__ == "__main__":

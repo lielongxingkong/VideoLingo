@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-import subprocess
+import ffmpeg
 from pydub import AudioSegment
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 from rich.console import Console
@@ -38,18 +38,32 @@ def get_audio_files(df):
 def process_audio_segment(audio_file):
     """Process a single audio segment with MP3 compression"""
     temp_file = f"{audio_file}_temp.mp3"
-    ffmpeg_cmd = [
-        'ffmpeg', '-y',
-        '-i', audio_file,
-        '-ar', '16000',
-        '-ac', '1',
-        '-b:a', '64k',
-        temp_file
-    ]
-    subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    audio_segment = AudioSegment.from_mp3(temp_file)
-    os.remove(temp_file)
-    return audio_segment
+    try:
+        stream = ffmpeg.input(audio_file)
+        stream = ffmpeg.output(
+            stream,
+            temp_file,
+            ar=16000,
+            ac=1,
+            audio_bitrate='64k',
+            y=None
+        )
+        ffmpeg.run(stream, overwrite_output=True, quiet=True)
+        audio_segment = AudioSegment.from_mp3(temp_file)
+        return audio_segment
+    except ffmpeg.Error as e:
+        console.print(f"[bold yellow]⚠️  FFmpeg warning for {audio_file}, trying direct load...[/bold yellow]")
+        # Try to load directly without recompression
+        return AudioSegment.from_file(audio_file).set_frame_rate(16000).set_channels(1)
+    except Exception as e:
+        console.print(f"[bold red]❌ Error processing {audio_file}: {e}, trying direct load...[/bold red]")
+        return AudioSegment.from_file(audio_file).set_frame_rate(16000).set_channels(1)
+    finally:
+        if os.path.exists(temp_file):
+            try:
+                os.remove(temp_file)
+            except:
+                pass
 
 def merge_audio_segments(audios, new_sub_times, sample_rate):
     merged_audio = AudioSegment.silent(duration=0, frame_rate=sample_rate)

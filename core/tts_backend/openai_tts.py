@@ -9,13 +9,12 @@ from rich import print as rprint
 @except_handler("Failed to generate audio using OpenAI TTS")
 def openai_tts_for_videolingo(text, save_as):
     """
-    Generate speech using OpenAI Text-to-Speech API
+    Generate speech using OpenAI Text-to-Speech API (gpt-4o-mini-tts)
     """
     # Get API configuration from config, fall back to main API config if not set
     api_key = load_key("openai_tts.api_key") or load_key("api.key")
     base_url = load_key("openai_tts.base_url") or load_key("api.base_url")
     voice = load_key("openai_tts.voice") or DEFAULT_OPENAI_TTS_VOICE
-    model = load_key("openai_tts.model") or DEFAULT_OPENAI_TTS_MODEL
 
     if not api_key:
         raise ValueError("OpenAI API key is not set. Please set either openai_tts.api_key or api.key in the Streamlit settings page")
@@ -31,8 +30,9 @@ def openai_tts_for_videolingo(text, save_as):
     save_path = Path(save_as)
     save_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Use gpt-4o-mini-tts with audio.speech.create
     with client.audio.speech.with_streaming_response.create(
-        model=model,
+        model="gpt-4o-mini-tts",
         voice=voice,
         input=text,
         response_format="wav"

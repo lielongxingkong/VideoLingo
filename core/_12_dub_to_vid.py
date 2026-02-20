@@ -1,6 +1,6 @@
 import os
 import platform
-import subprocess
+import ffmpeg
 
 import cv2
 import numpy as np
@@ -12,6 +12,20 @@ from core.utils import *
 from core.utils.models import *
 
 console = Console()
+
+# Check if we're in Streamlit environment
+try:
+    import streamlit as st
+    IN_STREAMLIT = True
+except ImportError:
+    IN_STREAMLIT = False
+
+
+def show_warning(message):
+    """Show warning message in both console and Streamlit UI if available"""
+    console.print(f"[bold yellow]{message}[/bold yellow]")
+    if IN_STREAMLIT:
+        st.warning(message)
 
 DUB_VIDEO = "output/output_dub.mp4"
 DUB_SUB_FILE = 'output/dub.srt'
@@ -26,8 +40,156 @@ if platform.system() == 'Darwin':
 
 TRANS_FONT_COLOR = '&H00FFFF'
 TRANS_OUTLINE_COLOR = '&H000000'
-TRANS_OUTLINE_WIDTH = 1 
+TRANS_OUTLINE_WIDTH = 1
 TRANS_BACK_COLOR = '&H33000000'
+
+
+def merge_with_gpu(input_video, background_file, normalized_dub_audio,
+                   filter_str, filter_complex, DUB_VIDEO, TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles):
+    """Try to merge with GPU acceleration"""
+    try:
+        if burn_subtitles:
+            if background_file:
+                stream = ffmpeg.input(input_video)
+                bg = ffmpeg.input(background_file)
+                dub = ffmpeg.input(normalized_dub_audio)
+                output_kwargs = {
+                    'y': None,
+                    'c:v': 'h264_nvenc',
+                    'c:a': 'aac',
+                    'b:a': '96k',
+                }
+                stream = ffmpeg.output(
+                    stream, bg, dub,
+                    DUB_VIDEO,
+                    filter_complex=filter_complex,
+                    **output_kwargs
+                )
+            else:
+                stream = ffmpeg.input(input_video)
+                dub = ffmpeg.input(normalized_dub_audio)
+                output_kwargs = {
+                    'y': None,
+                    'vf': filter_str,
+                    'c:v': 'h264_nvenc',
+                    'c:a': 'aac',
+                    'b:a': '96k',
+                }
+                stream = ffmpeg.output(
+                    stream, dub,
+                    DUB_VIDEO,
+                    **output_kwargs
+                )
+        else:
+            if background_file:
+                stream = ffmpeg.input(input_video)
+                bg = ffmpeg.input(background_file)
+                dub = ffmpeg.input(normalized_dub_audio)
+                output_kwargs = {
+                    'y': None,
+                    'c:v': 'h264_nvenc',
+                    'c:a': 'aac',
+                    'b:a': '96k',
+                }
+                stream = ffmpeg.output(
+                    stream, bg, dub,
+                    DUB_VIDEO,
+                    filter_complex=filter_complex,
+                    **output_kwargs
+                )
+            else:
+                stream = ffmpeg.input(input_video)
+                dub = ffmpeg.input(normalized_dub_audio)
+                output_kwargs = {
+                    'y': None,
+                    'c:v': 'h264_nvenc',
+                    'c:a': 'aac',
+                    'b:a': '96k',
+                }
+                stream = ffmpeg.output(
+                    stream, dub,
+                    DUB_VIDEO,
+                    **output_kwargs
+                )
+
+        ffmpeg.run(stream, overwrite_output=True, quiet=True)
+        return True
+    except ffmpeg.Error as e:
+        stderr = e.stderr.decode() if e.stderr else str(e)
+        if 'h264_nvenc' in stderr or 'No such device' in stderr or 'Cannot load' in stderr or 'Invalid argument' in stderr:
+            return False
+        raise e
+
+
+def merge_with_cpu(input_video, background_file, normalized_dub_audio,
+                   filter_str, filter_complex, DUB_VIDEO, TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles):
+    """Merge with CPU"""
+    if burn_subtitles:
+        if background_file:
+            stream = ffmpeg.input(input_video)
+            bg = ffmpeg.input(background_file)
+            dub = ffmpeg.input(normalized_dub_audio)
+            output_kwargs = {
+                'y': None,
+                'c:v': 'libx264',
+                'c:a': 'aac',
+                'b:a': '96k',
+            }
+            stream = ffmpeg.output(
+                stream, bg, dub,
+                DUB_VIDEO,
+                filter_complex=filter_complex,
+                **output_kwargs
+            )
+        else:
+            stream = ffmpeg.input(input_video)
+            dub = ffmpeg.input(normalized_dub_audio)
+            output_kwargs = {
+                'y': None,
+                'vf': filter_str,
+                'c:v': 'libx264',
+                'c:a': 'aac',
+                'b:a': '96k',
+            }
+            stream = ffmpeg.output(
+                stream, dub,
+                DUB_VIDEO,
+                **output_kwargs
+            )
+    else:
+        if background_file:
+            stream = ffmpeg.input(input_video)
+            bg = ffmpeg.input(background_file)
+            dub = ffmpeg.input(normalized_dub_audio)
+            output_kwargs = {
+                'y': None,
+                'c:v': 'libx264',
+                'c:a': 'aac',
+                'b:a': '96k',
+            }
+            stream = ffmpeg.output(
+                stream, bg, dub,
+                DUB_VIDEO,
+                filter_complex=filter_complex,
+                **output_kwargs
+            )
+        else:
+            stream = ffmpeg.input(input_video)
+            dub = ffmpeg.input(normalized_dub_audio)
+            output_kwargs = {
+                'y': None,
+                'c:v': 'libx264',
+                'c:a': 'aac',
+                'b:a': '96k',
+            }
+            stream = ffmpeg.output(
+                stream, dub,
+                DUB_VIDEO,
+                **output_kwargs
+            )
+
+    ffmpeg.run(stream, overwrite_output=True, quiet=True)
+
 
 def merge_video_audio():
     """Merge video and audio"""
@@ -64,90 +226,60 @@ def merge_video_audio():
 
     # Check if burn_subtitles is enabled
     burn_subtitles = load_key("burn_subtitles")
+    ffmpeg_gpu = load_key("ffmpeg_gpu")
 
+    # Build filter strings first
     if burn_subtitles:
-        # Try to use subtitles filter (requires libass support in FFmpeg)
         if background_file:
-            # Mix background audio with dub audio using amix
-            cmd = [
-                'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', background_file, '-i', normalized_dub_audio,
-                '-filter_complex',
+            filter_str = None
+            filter_complex = (
                 f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,'
                 f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,'
                 f"subtitles=filename={DUB_SUB_FILE}[v];"
                 f'[1:a][2:a]amix=inputs=2:duration=first:dropout_transition=3[a]'
-            ]
+            )
         else:
-            cmd = [
-                'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', normalized_dub_audio,
-                '-filter_complex',
+            filter_str = (
                 f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,'
                 f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,'
                 f"subtitles=filename={DUB_SUB_FILE}[v]"
-            ]
-
-        if load_key("ffmpeg_gpu"):
-            rprint("[bold green]Using GPU acceleration...[/bold green]")
-            if background_file:
-                cmd.extend(['-map', '[v]', '-map', '[a]', '-c:v', 'h264_nvenc'])
-            else:
-                cmd.extend(['-map', '[v]', '-map', '1:a', '-c:v', 'h264_nvenc'])
-        else:
-            if background_file:
-                cmd.extend(['-map', '[v]', '-map', '[a]'])
-            else:
-                cmd.extend(['-map', '[v]', '-map', '1:a'])
-
-        cmd.extend(['-c:a', 'aac', '-b:a', '96k', DUB_VIDEO])
-
-        result = subprocess.run(cmd, capture_output=True, text=True)
-
-        # Check if subtitles filter is available
-        if 'No such filter' in result.stderr or 'Filter not found' in result.stderr:
-            rprint("[yellow]⚠️ FFmpeg does not support 'subtitles' filter (missing libass). Skipping subtitle burning...[/yellow]")
-            burn_subtitles = False
-        else:
-            if result.returncode != 0:
-                rprint(f"[yellow]⚠️ Subtitle burning failed, falling back to no subtitles...[/yellow]")
-                rprint(f"[yellow]Error: {result.stderr[:200]}[/yellow]")
-                burn_subtitles = False
-            else:
-                rprint(f"[bold green]Video and audio successfully merged into {DUB_VIDEO}[/bold green]")
-                return
-
-    # Fallback: merge without subtitles
-    if not burn_subtitles:
+            )
+            filter_complex = None
+    else:
         if background_file:
-            # Mix background audio with dub audio
-            cmd = [
-                'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', background_file, '-i', normalized_dub_audio,
-                '-filter_complex',
+            filter_str = None
+            filter_complex = (
                 f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,'
                 f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,'
                 f'setsar=1[v];'
                 f'[1:a][2:a]amix=inputs=2:duration=first:dropout_transition=3[a]'
-            ]
+            )
         else:
-            cmd = [
-                'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', normalized_dub_audio,
-            ]
+            filter_str = None
+            filter_complex = None
 
-        if load_key("ffmpeg_gpu"):
-            rprint("[bold green]Using GPU acceleration...[/bold green]")
-            if background_file:
-                cmd.extend(['-map', '[v]', '-map', '[a]', '-c:v', 'h264_nvenc'])
-            else:
-                cmd.extend(['-map', '0:v', '-map', '1:a', '-c:v', 'h264_nvenc'])
-        else:
-            if background_file:
-                cmd.extend(['-map', '[v]', '-map', '[a]'])
-            else:
-                cmd.extend(['-map', '0:v', '-map', '1:a'])
+    # Try GPU first if enabled
+    gpu_success = False
+    if ffmpeg_gpu:
+        console.print("[bold green]Using GPU acceleration...[/bold green]")
+        gpu_success = merge_with_gpu(
+            VIDEO_FILE, background_file, normalized_dub_audio,
+            filter_str, filter_complex, DUB_VIDEO,
+            TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles
+        )
+        if not gpu_success:
+            show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
 
-        cmd.extend(['-c:a', 'aac', '-b:a', '96k', DUB_VIDEO])
+    # Use CPU if GPU failed or not enabled
+    if not gpu_success:
+        merge_with_cpu(
+            VIDEO_FILE, background_file, normalized_dub_audio,
+            filter_str, filter_complex, DUB_VIDEO,
+            TARGET_WIDTH, TARGET_HEIGHT, burn_subtitles
+        )
 
-        subprocess.run(cmd)
-        rprint(f"[bold green]Video and audio successfully merged into {DUB_VIDEO}[/bold green]")
+    rprint(f"[bold green]Video and audio successfully merged into {DUB_VIDEO}[/bold green]")
+
 
 if __name__ == '__main__':
     merge_video_audio()

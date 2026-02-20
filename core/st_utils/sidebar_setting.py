@@ -226,7 +226,7 @@ def page_setting():
             config_input(t("OpenAI API Key"), "openai_tts.api_key", key_suffix="tts_api", placeholder="sk-...")
             config_input(t("OpenAI Base URL"), "openai_tts.base_url", key_suffix="tts_url", placeholder="https://api.openai.com/v1")
 
-            # Voice selection
+            # Voice selection (for gpt-4o-mini-tts)
             current_voice = load_key("openai_tts.voice") or DEFAULT_OPENAI_TTS_VOICE
             if "prev_openai_voice" not in st.session_state:
                 st.session_state.prev_openai_voice = current_voice
@@ -237,20 +237,9 @@ def page_setting():
                 index=OPENAI_TTS_VOICE_OPTIONS.index(current_voice) if current_voice in OPENAI_TTS_VOICE_OPTIONS else 0,
                 key="openai_voice_selectbox"
             )
-            # Model selection
-            current_model = load_key("openai_tts.model") or DEFAULT_OPENAI_TTS_MODEL
-            if "prev_openai_model" not in st.session_state:
-                st.session_state.prev_openai_model = current_model
-
-            selected_model = st.selectbox(
-                t("OpenAI Model"),
-                options=OPENAI_TTS_MODEL_OPTIONS,
-                index=OPENAI_TTS_MODEL_OPTIONS.index(current_model) if current_model in OPENAI_TTS_MODEL_OPTIONS else 0,
-                key="openai_model_selectbox"
-            )
-            if selected_model != st.session_state.prev_openai_model:
-                update_key("openai_tts.model", selected_model)
-                st.session_state.prev_openai_model = selected_model
+            if selected_voice != st.session_state.prev_openai_voice:
+                update_key("openai_tts.voice", selected_voice)
+                st.session_state.prev_openai_voice = selected_voice
                 st.rerun()
 
     # Advanced Settings

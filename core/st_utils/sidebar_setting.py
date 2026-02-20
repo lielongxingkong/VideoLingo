@@ -13,8 +13,45 @@ from core.constants import (
     ASR_LANGUAGE_OPTIONS,
     DEFAULT_OPENAI_TTS_VOICE,
     DEFAULT_OPENAI_TTS_MODEL,
+    DEFAULT_EDGE_TTS_VOICE,
 )
 from core.utils import *
+
+# Common edge-tts voices by language (voice: (locale, gender))
+EDGE_TTS_VOICE_OPTIONS = {
+    # Chinese
+    "zh-CN-XiaoxiaoNeural": ("中文", "女"),
+    "zh-CN-XiaoyiNeural": ("中文", "女"),
+    "zh-CN-YunjianNeural": ("中文", "男"),
+    "zh-HK-HiuGaaiNeural": ("粤语", "女"),
+    "zh-HK-HiuMaanNeural": ("粤语", "女"),
+    # English
+    "en-US-JennyNeural": ("英语", "女"),
+    "en-US-GuyNeural": ("英语", "男"),
+    "en-US-EmmaNeural": ("英语", "女"),
+    "en-GB-SoniaNeural": ("英语", "女"),
+    "en-AU-NatashaNeural": ("英语", "女"),
+    # Japanese
+    "ja-JP-NanamiNeural": ("日语", "女"),
+    "ja-JP-KeitaNeural": ("日语", "男"),
+    # Korean
+    "ko-KR-SunHiNeural": ("韩语", "女"),
+    "ko-KR-HyunsuMultilingualNeural": ("韩语", "男"),
+    # European
+    "es-ES-XimenaNeural": ("西班牙语", "女"),
+    "fr-FR-DeniseNeural": ("法语", "女"),
+    "de-DE-AmalaNeural": ("德语", "女"),
+    "ru-RU-SvetlanaNeural": ("俄语", "女"),
+}
+
+
+def get_edge_voice_display(voice):
+    """Get display text for voice"""
+    if voice in EDGE_TTS_VOICE_OPTIONS:
+        lang, gender = EDGE_TTS_VOICE_OPTIONS[voice]
+        return f"{voice} ({lang}-{gender})"
+    return voice
+
 
 def config_input(label, key, help=None, key_suffix=None, placeholder=None):
     """Generic config input handler"""
@@ -106,8 +143,8 @@ def page_setting():
             config_input(t("MODEL"), "api.model", help=t("click to check API validity")+ " 👉")
         with c2:
             if st.button("📡", key="api"):
-                st.toast(t("API Key is valid") if check_api() else t("API Key is invalid"),
-                        icon="✅" if check_api() else "❌")
+                is_valid, msg = check_api()
+                st.toast(msg, icon="✅" if is_valid else "❌")
         llm_support_json = st.toggle(t("LLM JSON Format Support"), value=load_key("api.llm_support_json"), help=t("Enable if your LLM supports JSON mode output"))
         if llm_support_json != load_key("api.llm_support_json"):
             update_key("api.llm_support_json", llm_support_json)
@@ -178,7 +215,23 @@ def page_setting():
 
         # sub settings for each tts method
         if select_tts == "edge_tts":
-            config_input(t("Edge TTS Voice"), "edge_tts.voice", placeholder="zh-CN-XiaoxiaoNeural")
+            voice_options = list(EDGE_TTS_VOICE_OPTIONS.keys())
+            voice_display = [get_edge_voice_display(v) for v in voice_options]
+
+            current_voice = load_key("edge_tts.voice") or DEFAULT_EDGE_TTS_VOICE
+            if current_voice not in voice_options:
+                current_voice = voice_options[0]
+
+            selected_voice = st.selectbox(
+                t("Edge TTS Voice"),
+                options=voice_display,
+                index=voice_options.index(current_voice),
+                key="edge_voice_selectbox"
+            )
+            # Map back to actual voice name
+            selected_voice = voice_options[voice_display.index(selected_voice)]
+            if selected_voice != current_voice:
+                update_key("edge_tts.voice", selected_voice)
 
         elif select_tts == "openai_tts":
             config_input(t("OpenAI API Key"), "openai_tts.api_key", key_suffix="tts_api", placeholder="sk-...")
@@ -390,12 +443,66 @@ def page_setting():
                 update_key("tolerance", tolerance)
 
 def check_api():
+    """Test API with a simple JSON request (no retry)"""
+    from openai import OpenAI
+    import json
+    api_key = load_key("api.key")
+    base_url = load_key("api.base_url")
+
+    if not api_key:
+        return False, "❌ API key is not set"
+
+    # Normalize base_url
+    if 'v1' not in base_url:
+        base_url = base_url.strip('/') + '/v1'
+
+    print(f"[API Test] Testing {base_url} with model {load_key('api.model')}")
+
     try:
-        resp = ask_gpt("This is a test, response 'message':'success' in json format.",
-                      resp_type="json", log_title='None')
-        return resp.get('message') == 'success'
-    except Exception:
-        return False
+        client = OpenAI(api_key=api_key, base_url=base_url)
+
+        # Try with response_format and reasoning_split first
+        try:
+            resp = client.chat.completions.create(
+                model=load_key("api.model"),
+                messages=[{"role": "user", "content": "Reply with JSON: {\"message\": \"success\"}"}],
+                response_format={"type": "json_object"},
+                extra_body={"reasoning_split": True}
+            )
+            print(f"[API Test] Used response_format + reasoning_split")
+        except Exception as format_err:
+            print(f"[API Test] response_format/reasoning_split not supported, trying without: {format_err}")
+            try:
+                resp = client.chat.completions.create(
+                    model=load_key("api.model"),
+                    messages=[{"role": "user", "content": "Reply with JSON: {\"message\": \"success\"}"}],
+                    response_format={"type": "json_object"}
+                )
+            except Exception as format_err2:
+                print(f"[API Test] response_format not supported either, trying basic: {format_err2}")
+                resp = client.chat.completions.create(
+                    model=load_key("api.model"),
+                    messages=[{"role": "user", "content": "Reply with JSON: {\"message\": \"success\"}"}]
+                )
+
+        print(f"[API Test] Full response: {resp}")
+        msg = resp.choices[0].message
+        # When reasoning_split=True, JSON is in content, thinking is in reasoning_details
+        # So we use content directly
+        content = msg.content
+        print(f"[API Test] Using content (JSON): {repr(content)}")
+        json_content = content.strip()
+
+        resp_data = json.loads(json_content)
+        if isinstance(resp_data, dict) and 'message' in resp_data:
+            return True, f"✅ API works! Response: {resp_data}"
+        else:
+            return False, f"❌ Invalid response: {resp_data}"
+    except Exception as e:
+        import traceback
+        print(f"[API Test] Error: {e}")
+        traceback.print_exc()
+        return False, f"❌ API error: {str(e)[:150]}"
 
 if __name__ == "__main__":
     check_api()

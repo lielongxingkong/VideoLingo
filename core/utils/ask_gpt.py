@@ -1,10 +1,8 @@
-import os
 import json
-from threading import Lock
+import re
 import json_repair
 from openai import OpenAI
 from core.utils.config_utils import load_key
-from rich import print as rprint
 from core.utils.decorator import except_handler
 
 # Try to import anthropic, but don't fail if not available
@@ -14,34 +12,6 @@ try:
 except ImportError:
     ANTHROPIC_AVAILABLE = False
 
-# ------------
-# cache gpt response
-# ------------
-
-LOCK = Lock()
-GPT_LOG_FOLDER = 'output/gpt_log'
-
-def _save_cache(model, prompt, resp_content, resp_type, resp, message=None, log_title="default"):
-    with LOCK:
-        logs = []
-        file = os.path.join(GPT_LOG_FOLDER, f"{log_title}.json")
-        os.makedirs(os.path.dirname(file), exist_ok=True)
-        if os.path.exists(file):
-            with open(file, 'r', encoding='utf-8') as f:
-                logs = json.load(f)
-        logs.append({"model": model, "prompt": prompt, "resp_content": resp_content, "resp_type": resp_type, "resp": resp, "message": message})
-        with open(file, 'w', encoding='utf-8') as f:
-            json.dump(logs, f, ensure_ascii=False, indent=4)
-
-def _load_cache(prompt, resp_type, log_title):
-    with LOCK:
-        file = os.path.join(GPT_LOG_FOLDER, f"{log_title}.json")
-        if os.path.exists(file):
-            with open(file, 'r', encoding='utf-8') as f:
-                for item in json.load(f):
-                    if item["prompt"] == prompt and item["resp_type"] == resp_type:
-                        return item["resp"]
-        return False
 
 # ------------
 # ask gpt once
@@ -51,11 +21,6 @@ def _load_cache(prompt, resp_type, log_title):
 def ask_gpt(prompt, resp_type=None, valid_def=None, log_title="default"):
     if not load_key("api.key"):
         raise ValueError("API key is not set")
-    # check cache
-    cached = _load_cache(prompt, resp_type, log_title)
-    if cached:
-        rprint("use cache response")
-        return cached
 
     model = load_key("api.model")
     api_key = load_key("api.key")
@@ -98,39 +63,58 @@ def ask_gpt(prompt, resp_type=None, valid_def=None, log_title="default"):
         elif 'v1' not in base_url:
             base_url = base_url.strip('/') + '/v1'
         client = OpenAI(api_key=api_key, base_url=base_url)
-        response_format = {"type": "json_object"} if resp_type == "json" and load_key("api.llm_support_json") else None
+
+        # Always use response_format for JSON mode when supported
+        response_format = None
+        if resp_type == "json" and load_key("api.llm_support_json"):
+            response_format = {"type": "json_object"}
 
         messages = [{"role": "user", "content": prompt}]
 
         params = dict(
             model=model,
             messages=messages,
-            response_format=response_format,
             timeout=300
         )
+        if response_format:
+            params["response_format"] = response_format
+
+        # Use extra_body for MiniMax reasoning_split parameter
+        if resp_type == "json":
+            params["extra_body"] = {"reasoning_split": True}
+
         resp_raw = client.chat.completions.create(**params)
 
         # process and return full result
-        resp_content = resp_raw.choices[0].message.content
+        # When reasoning_split=True, JSON is in content, thinking is in reasoning_details
+        msg = resp_raw.choices[0].message
+        resp_content = msg.content
 
     if resp_type == "json":
-        resp = json_repair.loads(resp_content)
+        try:
+            resp = json_repair.loads(resp_content)
+        except Exception as e:
+            raise ValueError(f"❎ JSON parse error: {e}")
+
+        # Basic validation: ensure it's a dict, not a list or other type
+        if not isinstance(resp, dict):
+            raise ValueError(f"❎ Expected JSON object, got {type(resp).__name__}: {str(resp)[:200]}")
+
     else:
         resp = resp_content
 
     # check if the response format is valid
-    if valid_def:
+    # Always validate when JSON mode is enabled
+    if valid_def and load_key("api.llm_support_json"):
         valid_resp = valid_def(resp)
         if valid_resp['status'] != 'success':
-            _save_cache(model, prompt, resp_content, resp_type, resp, log_title="error", message=valid_resp['message'])
             raise ValueError(f"❎ API response error: {valid_resp['message']}")
 
-    _save_cache(model, prompt, resp_content, resp_type, resp, log_title=log_title)
     return resp
 
 
 if __name__ == '__main__':
     from rich import print as rprint
-    
+
     result = ask_gpt("""test respond ```json\n{\"code\": 200, \"message\": \"success\"}\n```""", resp_type="json")
     rprint(f"Test json output result: {result}")

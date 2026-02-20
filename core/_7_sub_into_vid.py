@@ -20,6 +20,10 @@ def show_warning(message):
 
 def check_gpu_available():
     """Check if h264_nvenc encoder is available via ffmpeg"""
+    import platform
+    # h264_nvenc is only available on NVIDIA GPUs (Linux/Windows), not macOS
+    if platform.system() == 'Darwin':
+        return False
     try:
         import subprocess
         result = subprocess.run(

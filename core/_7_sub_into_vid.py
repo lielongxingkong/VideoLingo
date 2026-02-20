@@ -76,44 +76,32 @@ def merge_subtitles_to_video():
     )
 
     ffmpeg_gpu = load_key("ffmpeg_gpu")
+    gpu_encoder = None
 
-    # Try GPU if enabled and available
+    # Check if GPU is available when enabled
     if ffmpeg_gpu:
         gpu_encoder = check_gpu_available()
-        if gpu_encoder:
-            try:
-                rprint(f"[bold green]Using GPU acceleration ({gpu_encoder})...[/bold green]")
-                gpu_stream = ffmpeg.input(video_file)
-                gpu_stream = ffmpeg.output(
-                    gpu_stream,
-                    OUTPUT_VIDEO,
-                    vf=filter_str,
-                    vcodec=gpu_encoder,
-                    acodec='aac',
-                    y=None
-                )
-                ffmpeg.run(gpu_stream, overwrite_output=True, quiet=True)
-                return  # Success
-            except ffmpeg.Error:
-                # GPU execution failed, fall back to CPU
-                show_warning(f"⚠️ GPU acceleration ({gpu_encoder}) failed, falling back to CPU...")
-
-        # GPU not available, fall back to CPU
-        else:
+        if not gpu_encoder:
             show_warning("⚠️ GPU acceleration not available, falling back to CPU...")
 
-    # Use CPU
-    rprint("[bold green]Using CPU for encoding...[/bold green]")
-    cpu_stream = ffmpeg.input(video_file)
-    cpu_stream = ffmpeg.output(
-        cpu_stream,
+    # Use GPU if available, otherwise CPU
+    if gpu_encoder:
+        rprint(f"[bold green]Using GPU acceleration ({gpu_encoder})...[/bold green]")
+        encoder = gpu_encoder
+    else:
+        rprint("[bold green]Using CPU for encoding...[/bold green]")
+        encoder = 'libx264'
+
+    stream = ffmpeg.input(video_file)
+    stream = ffmpeg.output(
+        stream,
         OUTPUT_VIDEO,
         vf=filter_str,
-        vcodec='libx264',
+        vcodec=encoder,
         acodec='aac',
         y=None
     )
-    ffmpeg.run(cpu_stream, overwrite_output=True, quiet=True)
+    ffmpeg.run(stream, overwrite_output=True, quiet=True)
 
     rprint(f"\n✅ Done! Time taken: {time.time() - start_time:.2f} seconds")
 

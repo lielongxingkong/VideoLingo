@@ -81,7 +81,7 @@ API_FORMAT_OPTIONS = ["openai", "anthropic"]
 ASR_RUNTIME_OPTIONS = ["elevenlabs", "openai"]
 
 # TTS Method options
-TTS_METHOD_OPTIONS = ["edge_tts", "openai_tts"]
+TTS_METHOD_OPTIONS = ["edge_tts", "openai_tts", "openai_audio_preview"]
 
 # OpenAI TTS voice options (used by gpt-4o-mini-tts)
 OPENAI_TTS_VOICE_OPTIONS = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]

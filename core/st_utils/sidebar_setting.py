@@ -222,11 +222,11 @@ def page_setting():
             if selected_voice != current_voice:
                 update_key("edge_tts.voice", selected_voice)
 
-        elif select_tts == "openai_tts":
+        elif select_tts == "openai_tts" or select_tts == "openai_audio_preview":
             config_input(t("OpenAI API Key"), "openai_tts.api_key", key_suffix="tts_api", placeholder="sk-...")
             config_input(t("OpenAI Base URL"), "openai_tts.base_url", key_suffix="tts_url", placeholder="https://api.openai.com/v1")
 
-            # Voice selection (for gpt-4o-mini-tts)
+            # Voice selection (for gpt-4o-mini-tts and gpt-4o-mini-audio-preview)
             current_voice = load_key("openai_tts.voice") or DEFAULT_OPENAI_TTS_VOICE
             if "prev_openai_voice" not in st.session_state:
                 st.session_state.prev_openai_voice = current_voice

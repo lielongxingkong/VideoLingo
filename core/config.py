@@ -150,7 +150,7 @@ class Config:
             raise ValueError("Whisper runtime must be 'elevenlabs' or 'openai'")
 
         # Validate TTS settings
-        allowed_tts_methods = ["edge_tts", "custom_tts", "openai_tts"]
+        allowed_tts_methods = ["edge_tts", "openai_tts"]
         if self.tts_method not in allowed_tts_methods:
             raise ValueError(f"TTS method must be one of {allowed_tts_methods}")
 

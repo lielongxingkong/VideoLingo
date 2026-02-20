@@ -3,14 +3,17 @@ import json
 import concurrent.futures
 from core.translate_lines import translate_lines
 from core._4_1_summarize import search_things_to_note_in_prompt
-from core._8_1_audio_task import check_len_then_trim
-from core._6_gen_sub import align_timestamp
+from core.utils.text_utils import check_len_then_trim
+from core.utils.subtitle_utils import align_timestamp
 from core.utils import *
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from difflib import SequenceMatcher
 from core.utils.models import *
+from core.logger import get_logger
+
 console = Console()
+logger = get_logger(__name__)
 
 # Function to split text into chunks
 def split_chunks_by_chars(chunk_size, max_i): 
@@ -53,7 +56,7 @@ def similar(a, b):
 # 🚀 Main function to translate all chunks
 @check_file_exists(_4_2_TRANSLATION)
 def translate_all():
-    console.print("[bold green]Start Translating All...[/bold green]")
+    logger.info("[bold green]Start Translating All...[/bold green]")
     chunks = split_chunks_by_chars(chunk_size=600, max_i=10)
     with open(_4_1_TERMINOLOGY, 'r', encoding='utf-8') as file:
         theme_prompt = json.load(file).get('theme')
@@ -72,28 +75,28 @@ def translate_all():
                 progress.update(task, advance=1)
 
     results.sort(key=lambda x: x[0])  # Sort results based on original order
-    
+
     # 💾 Save results to lists and Excel file
     src_text, trans_text = [], []
     for i, chunk in enumerate(chunks):
         chunk_lines = chunk.split('\n')
         src_text.extend(chunk_lines)
-        
+
         # Calculate similarity between current chunk and translation results
         chunk_text = ''.join(chunk_lines).lower()
-        matching_results = [(r, similar(''.join(r[1].split('\n')).lower(), chunk_text)) 
+        matching_results = [(r, similar(''.join(r[1].split('\n')).lower(), chunk_text))
                           for r in results]
         best_match = max(matching_results, key=lambda x: x[1])
-        
+
         # Check similarity and handle exceptions
         if best_match[1] < 0.9:
-            console.print(f"[yellow]Warning: No matching translation found for chunk {i}[/yellow]")
+            logger.warning(f"No matching translation found for chunk {i}")
             raise ValueError(f"Translation matching failed (chunk {i})")
         elif best_match[1] < 1.0:
-            console.print(f"[yellow]Warning: Similar match found (chunk {i}, similarity: {best_match[1]:.3f})[/yellow]")
-            
+            logger.warning(f"Similar match found (chunk {i}, similarity: {best_match[1]:.3f})")
+
         trans_text.extend(best_match[0][2].split('\n'))
-    
+
     # Trim long translation text
     df_text = pd.read_excel(_2_CLEANED_CHUNKS)
     df_text['text'] = df_text['text'].str.strip('"').str.strip()
@@ -104,9 +107,9 @@ def translate_all():
     # apply check_len_then_trim to df_time['Translation'], only when duration > MIN_TRIM_DURATION.
     df_time['Translation'] = df_time.apply(lambda x: check_len_then_trim(x['Translation'], x['duration']) if x['duration'] > load_key("min_trim_duration") else x['Translation'], axis=1)
     console.print(df_time)
-    
+
     df_time.to_excel(_4_2_TRANSLATION, index=False)
-    console.print("[bold green]✅ Translation completed and results saved.[/bold green]")
+    logger.success("✅ Translation completed and results saved.")
 
 if __name__ == '__main__':
     translate_all()

@@ -24,14 +24,12 @@ from rich.logging import RichHandler
 # Configuration
 # ------------------------------
 
-LOG_DIR = "output/log"
+# Get project root directory (parent of core/)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOG_DIR = os.path.join(PROJECT_ROOT, "output", "log")
 LOG_FILE = os.path.join(LOG_DIR, "app.log")
 MAX_LOG_SIZE = 10 * 1024 * 1024  # 10MB
 BACKUP_COUNT = 5  # Keep 5 backup log files
-
-
-# Ensure log directory exists
-os.makedirs(LOG_DIR, exist_ok=True)
 
 
 # ------------------------------
@@ -115,6 +113,8 @@ def get_logger(name: str) -> VideoLingoLogger:
     # ------------------------------
     # File Handler (Rotating)
     # ------------------------------
+    # Ensure log directory exists before creating file handler
+    os.makedirs(LOG_DIR, exist_ok=True)
     file_handler = RotatingFileHandler(
         LOG_FILE,
         maxBytes=MAX_LOG_SIZE,

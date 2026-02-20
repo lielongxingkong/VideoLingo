@@ -61,8 +61,12 @@ def text_processing_section():
 
         if not os.path.exists(SUB_VIDEO):
             if st.button(t("Start Processing Subtitles"), key="text_processing_button"):
-                process_text()
-                st.rerun()
+                try:
+                    process_text()
+                    st.rerun()
+                except Exception as e:
+                    st.toast(f"❌ 错误: {str(e)}", icon="🚨")
+                    st.error(f"处理失败: {str(e)}")
         else:
             if load_key("burn_subtitles"):
                 st.video(SUB_VIDEO)
@@ -112,8 +116,12 @@ def audio_processing_section():
         """, unsafe_allow_html=True)
         if not os.path.exists(DUB_VIDEO):
             if st.button(t("Start Audio Processing"), key="audio_processing_button"):
-                process_audio()
-                st.rerun()
+                try:
+                    process_audio()
+                    st.rerun()
+                except Exception as e:
+                    st.toast(f"❌ 错误: {str(e)}", icon="🚨")
+                    st.error(f"处理失败: {str(e)}")
         else:
             st.success(t("Audio processing is complete! You can check the audio files in the `output` folder."))
             if load_key("burn_subtitles"):
